@@ -1,0 +1,288 @@
+{
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Sarah Chen",
+      "email": "sarah.chen@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
+      "country": "China",
+      "university": "MIT",
+      "major": "Computer Science",
+      "year": "Graduate",
+      "bio": "AI researcher passionate about NLP. Love hiking and trying new cuisines!",
+      "interests": ["Technology", "Hiking", "Cooking", "Photography"],
+      "languages": ["English", "Mandarin", "Japanese"],
+      "joinedAt": "2024-01-15",
+      "isOnline": true
+    },
+    {
+      "id": "user-2",
+      "name": "Marcus Johnson",
+      "email": "marcus.j@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "country": "Nigeria",
+      "university": "MIT",
+      "major": "Business Administration",
+      "year": "Senior",
+      "bio": "Entrepreneur at heart. Building the next big thing in EdTech.",
+      "interests": ["Entrepreneurship", "Basketball", "Music", "Travel"],
+      "languages": ["English", "French", "Yoruba"],
+      "joinedAt": "2024-02-20",
+      "isOnline": true
+    },
+    {
+      "id": "user-3",
+      "name": "Emma Müller",
+      "email": "emma.m@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      "country": "Germany",
+      "university": "MIT",
+      "major": "Environmental Science",
+      "year": "Junior",
+      "bio": "Climate activist and sustainability enthusiast. Let's save the planet together!",
+      "interests": ["Environment", "Yoga", "Reading", "Volunteering"],
+      "languages": ["English", "German", "Spanish"],
+      "joinedAt": "2024-03-10",
+      "isOnline": false
+    },
+    {
+      "id": "user-4",
+      "name": "Raj Patel",
+      "email": "raj.p@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+      "country": "India",
+      "university": "MIT",
+      "major": "Mechanical Engineering",
+      "year": "Senior",
+      "bio": "Building robots and breaking things. Coffee addict and hackathon enthusiast.",
+      "interests": ["Robotics", "Gaming", "Coffee", "Hackathons"],
+      "languages": ["English", "Hindi", "Gujarati"],
+      "joinedAt": "2024-01-05",
+      "isOnline": true
+    },
+    {
+      "id": "user-5",
+      "name": "Yuki Tanaka",
+      "email": "yuki.t@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
+      "country": "Japan",
+      "university": "MIT",
+      "major": "Architecture",
+      "year": "Graduate",
+      "bio": "Designing spaces that inspire. Love traditional arts and modern minimalism.",
+      "interests": ["Design", "Art", "Tea Ceremony", "Architecture"],
+      "languages": ["English", "Japanese"],
+      "joinedAt": "2024-02-28",
+      "isOnline": false
+    },
+    {
+      "id": "user-6",
+      "name": "Carlos Rodriguez",
+      "email": "carlos.r@university.edu",
+      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "country": "Mexico",
+      "university": "MIT",
+      "major": "Economics",
+      "year": "Junior",
+      "bio": "Numbers tell stories. Passionate about fintech and social impact.",
+      "interests": ["Finance", "Soccer", "Guitar", "Cooking"],
+      "languages": ["English", "Spanish", "Portuguese"],
+      "joinedAt": "2024-04-01",
+      "isOnline": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "group-1",
+      "name": "Global Explorers",
+      "description": "A diverse group of curious minds exploring life abroad together",
+      "members": ["user-1", "user-2", "user-3", "user-4"],
+      "createdAt": "2024-11-01",
+      "expiresAt": "2024-12-15",
+      "iceBreakers": [
+        "What's your favorite dish from your home country?",
+        "Share a unique tradition from your culture!",
+        "What surprised you most about studying abroad?"
+      ],
+      "checklist": [
+        { "id": "task-1", "title": "Introduce yourself with a fun fact", "completed": true },
+        { "id": "task-2", "title": "Share a photo from your hometown", "completed": true },
+        { "id": "task-3", "title": "Plan a virtual movie night", "completed": false },
+        { "id": "task-4", "title": "Exchange study tips", "completed": false }
+      ],
+      "polls": [
+        {
+          "id": "poll-1",
+          "question": "When should we have our group call?",
+          "options": [
+            { "id": "opt-1", "text": "Saturday 3 PM", "votes": 2 },
+            { "id": "opt-2", "text": "Sunday 5 PM", "votes": 1 },
+            { "id": "opt-3", "text": "Weekday evening", "votes": 1 }
+          ],
+          "votedBy": ["user-1", "user-2", "user-3", "user-4"]
+        }
+      ]
+    },
+    {
+      "id": "group-2",
+      "name": "Tech Innovators",
+      "description": "Students passionate about technology and innovation",
+      "members": ["user-1", "user-4", "user-5"],
+      "createdAt": "2024-10-01",
+      "expiresAt": "2024-11-15",
+      "iceBreakers": [],
+      "checklist": [],
+      "polls": []
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1",
+      "groupId": "group-1",
+      "senderId": "user-1",
+      "content": "Hey everyone! So excited to be in this group 🎉",
+      "timestamp": "2024-12-01T10:30:00Z",
+      "reactions": [
+        { "emoji": "👋", "users": ["user-2", "user-3"] },
+        { "emoji": "🎉", "users": ["user-4"] }
+      ]
+    },
+    {
+      "id": "msg-2",
+      "groupId": "group-1",
+      "senderId": "user-2",
+      "content": "Hi Sarah! Great to meet you all. I'm Marcus from Nigeria, studying Business.",
+      "timestamp": "2024-12-01T10:35:00Z",
+      "reactions": [
+        { "emoji": "👍", "users": ["user-1"] }
+      ]
+    },
+    {
+      "id": "msg-3",
+      "groupId": "group-1",
+      "senderId": "user-3",
+      "content": "Hello! I'm Emma from Germany. Looking forward to connecting with everyone!",
+      "timestamp": "2024-12-01T10:40:00Z",
+      "reactions": []
+    },
+    {
+      "id": "msg-4",
+      "groupId": "group-1",
+      "senderId": "user-4",
+      "content": "Hey team! Raj here. Anyone into hackathons? We should form a team! 🚀",
+      "timestamp": "2024-12-01T11:00:00Z",
+      "reactions": [
+        { "emoji": "🚀", "users": ["user-1", "user-2"] },
+        { "emoji": "💡", "users": ["user-3"] }
+      ]
+    },
+    {
+      "id": "msg-5",
+      "groupId": "group-1",
+      "senderId": "user-1",
+      "content": "I'm definitely interested! Let's do it! 💪",
+      "timestamp": "2024-12-01T11:15:00Z",
+      "reactions": [
+        { "emoji": "🔥", "users": ["user-4"] }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "event-1",
+      "title": "International Food Festival",
+      "description": "Share dishes from your home country and experience flavors from around the world!",
+      "date": "2024-12-20",
+      "time": "18:00",
+      "location": "Student Center",
+      "category": "Cultural",
+      "organizer": "user-1",
+      "attendees": ["user-1", "user-2", "user-3", "user-6"],
+      "maxAttendees": 50,
+      "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=250&fit=crop"
+    },
+    {
+      "id": "event-2",
+      "title": "Study Abroad Tips Workshop",
+      "description": "Learn essential tips for thriving as an international student from experienced peers.",
+      "date": "2024-12-22",
+      "time": "14:00",
+      "location": "Library Room 301",
+      "category": "Academic",
+      "organizer": "user-5",
+      "attendees": ["user-5", "user-3"],
+      "maxAttendees": 30,
+      "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=250&fit=crop"
+    },
+    {
+      "id": "event-3",
+      "title": "Weekly Soccer Meetup",
+      "description": "Friendly soccer games every weekend. All skill levels welcome!",
+      "date": "2024-12-21",
+      "time": "10:00",
+      "location": "Main Sports Field",
+      "category": "Sports",
+      "organizer": "user-6",
+      "attendees": ["user-6", "user-2", "user-4"],
+      "maxAttendees": 22,
+      "image": "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&h=250&fit=crop"
+    },
+    {
+      "id": "event-4",
+      "title": "Startup Networking Night",
+      "description": "Connect with fellow entrepreneurs and share your startup ideas!",
+      "date": "2024-12-25",
+      "time": "19:00",
+      "location": "Innovation Hub",
+      "category": "Networking",
+      "organizer": "user-2",
+      "attendees": ["user-2", "user-1", "user-4"],
+      "maxAttendees": 40,
+      "image": "https://images.unsplash.com/photo-1515169067868-5387ec356754?w=400&h=250&fit=crop"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "type": "group",
+      "title": "New Group Assigned",
+      "message": "You've been matched with Global Explorers! Say hi to your new group members.",
+      "timestamp": "2024-12-01T09:00:00Z",
+      "read": false
+    },
+    {
+      "id": "notif-2",
+      "type": "event",
+      "title": "Event Reminder",
+      "message": "International Food Festival is happening tomorrow!",
+      "timestamp": "2024-12-19T10:00:00Z",
+      "read": false
+    },
+    {
+      "id": "notif-3",
+      "type": "message",
+      "title": "New Message",
+      "message": "Raj sent a message in Global Explorers",
+      "timestamp": "2024-12-01T11:00:00Z",
+      "read": true
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann-1",
+      "title": "Welcome to Winter Semester!",
+      "content": "We're excited to have you back! New group rotations will begin on January 5th.",
+      "author": "Admin Team",
+      "createdAt": "2024-12-01T08:00:00Z",
+      "priority": "high"
+    },
+    {
+      "id": "ann-2",
+      "title": "Holiday Office Hours",
+      "content": "The international student office will be closed from Dec 24-26. For emergencies, contact the helpline.",
+      "author": "Student Services",
+      "createdAt": "2024-12-15T10:00:00Z",
+      "priority": "normal"
+    }
+  ]
+}
