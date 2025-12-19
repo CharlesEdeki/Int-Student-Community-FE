@@ -62,8 +62,8 @@ const Onboarding: React.FC = () => {
       }
     }
     if (step === 1) {
-      if (!onboardingData.study.university || !onboardingData.study.major) {
-        toast.error('Please fill in your university and major');
+      if (!onboardingData.study.major) {
+        toast.error('Please fill in your major');
         return;
       }
     }
@@ -190,17 +190,6 @@ const Onboarding: React.FC = () => {
           {/* Step 1: Studies */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="university">University *</Label>
-                <Input
-                  id="university"
-                  placeholder="Enter your university name"
-                  value={onboardingData.study.university}
-                  onChange={(e) => setOnboardingData({ 
-                    study: { ...onboardingData.study, university: e.target.value } 
-                  })}
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="major">Major / Field of Study *</Label>
                 <Input
