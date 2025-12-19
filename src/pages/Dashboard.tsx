@@ -4,19 +4,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import { 
   Users, MessageCircle, Calendar, Bell, Clock, 
-  Sparkles, ArrowRight, CheckCircle2, TrendingUp
+  Sparkles, ArrowRight, CheckCircle2, TrendingUp,
+  RefreshCw, Heart, RotateCcw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, differenceInHours } from 'date-fns';
+import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
-  const { currentUser, getCurrentGroup, users, events, notifications, getUserById } = useApp();
+  const { 
+    currentUser, getCurrentGroup, users, events, notifications, 
+    getUserById, rotationPreference, setRotationPreference 
+  } = useApp();
   const currentGroup = getCurrentGroup();
 
   const daysRemaining = currentGroup 
     ? differenceInDays(new Date(currentGroup.expiresAt), new Date()) 
+    : 0;
+  
+  const hoursRemaining = currentGroup
+    ? differenceInHours(new Date(currentGroup.expiresAt), new Date()) % 24
+    : 0;
+
+  const rotationProgress = currentGroup
+    ? Math.max(0, 100 - (daysRemaining / 14) * 100)
     : 0;
 
   const upcomingEvents = events.slice(0, 3);
@@ -25,6 +39,15 @@ const Dashboard: React.FC = () => {
   const groupMembers = currentGroup?.members
     .map(id => getUserById(id))
     .filter(Boolean) || [];
+
+  const handleRotationChoice = (choice: 'rotate' | 'stay') => {
+    setRotationPreference(choice);
+    toast.success(
+      choice === 'stay' 
+        ? 'Great! You\'ll stay with your current group next cycle.' 
+        : 'You\'ll be matched with a new group next rotation.'
+    );
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -71,8 +94,8 @@ const Dashboard: React.FC = () => {
                 <Clock className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{daysRemaining}</p>
-                <p className="text-sm text-muted-foreground">Days Remaining</p>
+                <p className="text-2xl font-bold text-foreground">{daysRemaining}d {hoursRemaining}h</p>
+                <p className="text-sm text-muted-foreground">Until Rotation</p>
               </div>
             </div>
           </CardContent>
@@ -106,6 +129,63 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rotation Countdown Card */}
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 shadow-soft">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <RefreshCw className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">2-Week Rotation Cycle</h3>
+                  <p className="text-sm text-muted-foreground">Next rotation in {daysRemaining} days</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Cycle Progress</span>
+                  <span className="font-medium text-foreground">{Math.round(rotationProgress)}%</span>
+                </div>
+                <Progress value={rotationProgress} className="h-2" />
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 min-w-[220px]">
+              <p className="text-sm font-medium text-foreground">What happens next rotation?</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={rotationPreference === 'stay' ? 'default' : 'outline'}
+                  className={`flex-1 gap-2 ${rotationPreference === 'stay' ? 'bg-gradient-primary text-primary-foreground' : ''}`}
+                  onClick={() => handleRotationChoice('stay')}
+                >
+                  <Heart className="w-4 h-4" />
+                  Stay
+                </Button>
+                <Button
+                  size="sm"
+                  variant={rotationPreference === 'rotate' ? 'default' : 'outline'}
+                  className={`flex-1 gap-2 ${rotationPreference === 'rotate' ? 'bg-gradient-primary text-primary-foreground' : ''}`}
+                  onClick={() => handleRotationChoice('rotate')}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Rotate
+                </Button>
+              </div>
+              {rotationPreference !== 'undecided' && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {rotationPreference === 'stay' 
+                    ? "You'll stay with this group" 
+                    : "You'll meet new people"}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

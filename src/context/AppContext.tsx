@@ -113,6 +113,7 @@ export interface OnboardingData {
     groupSize: string;
     matchingPreference: string;
     languages: string[];
+    rotationPreference: 'rotate' | 'stay' | 'undecided';
   };
 }
 
@@ -128,6 +129,7 @@ interface AppState {
   announcements: Announcement[];
   onboardingData: OnboardingData;
   currentGroupId: string | null;
+  rotationPreference: 'rotate' | 'stay' | 'undecided';
 }
 
 interface AppContextType extends AppState {
@@ -153,6 +155,7 @@ interface AppContextType extends AppState {
   updateUser: (userId: string, data: Partial<User>) => void;
   deleteUser: (userId: string) => void;
   addAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt'>) => void;
+  setRotationPreference: (preference: 'rotate' | 'stay' | 'undecided') => void;
 }
 
 const defaultOnboardingData: OnboardingData = {
@@ -160,7 +163,7 @@ const defaultOnboardingData: OnboardingData = {
   profile: { name: '', email: '', avatar: '', country: '', bio: '' },
   study: { university: '', major: '', year: '' },
   interests: [],
-  preferences: { groupSize: '', matchingPreference: '', languages: [] },
+  preferences: { groupSize: '', matchingPreference: '', languages: [], rotationPreference: 'undecided' },
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -178,6 +181,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     announcements: demoData.announcements as Announcement[],
     onboardingData: defaultOnboardingData,
     currentGroupId: 'group-1',
+    rotationPreference: 'undecided',
   });
 
   const login = useCallback(async (email: string, _password: string): Promise<boolean> => {
@@ -472,6 +476,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
+  const setRotationPreference = useCallback((preference: 'rotate' | 'stay' | 'undecided') => {
+    setState(prev => ({ ...prev, rotationPreference: preference }));
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -498,6 +506,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUser,
         deleteUser,
         addAnnouncement,
+        setRotationPreference,
       }}
     >
       {children}
