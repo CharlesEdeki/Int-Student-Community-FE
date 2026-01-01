@@ -185,34 +185,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const login = useCallback(async (email: string, _password: string): Promise<boolean> => {
-    const user = state.users.find(u => u.email === email);
+    const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
       setState(prev => ({ ...prev, isAuthenticated: true, currentUser: user }));
       return true;
     }
-    // Demo: allow any email to login, create a mock user
-    const mockUser: User = {
-      id: 'current-user',
-      name: email.split('@')[0],
-      email,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-      country: 'United States',
-      campus: 'Merchiston',
-      major: 'Undeclared',
-      year: 'Freshman',
-      bio: 'New member of the community!',
-      interests: [],
-      languages: ['English'],
-      joinedAt: new Date().toISOString().split('T')[0],
-      isOnline: true,
-    };
-    setState(prev => ({ 
-      ...prev, 
-      isAuthenticated: true, 
-      currentUser: mockUser,
-      users: [...prev.users, mockUser]
-    }));
-    return true;
+    // User not found - must register first
+    return false;
   }, [state.users]);
 
   const logout = useCallback(() => {
@@ -225,6 +204,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const register = useCallback(async (email: string, _password: string, name: string): Promise<boolean> => {
+    // Check if user already exists
+    const existingUser = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (existingUser) {
+      return false; // User already exists, must login instead
+    }
+    
     const newUser: User = {
       id: `user-${Date.now()}`,
       name,
@@ -247,7 +232,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isAuthenticated: true,
     }));
     return true;
-  }, []);
+  }, [state.users]);
 
   const setOnboardingData = useCallback((data: Partial<OnboardingData>) => {
     setState(prev => ({
