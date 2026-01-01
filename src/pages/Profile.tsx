@@ -27,7 +27,7 @@ const Profile: React.FC = () => {
     name: currentUser?.name || '',
     bio: currentUser?.bio || '',
     country: currentUser?.country || '',
-    university: currentUser?.university || '',
+    campus: currentUser?.campus || '',
     major: currentUser?.major || '',
     year: currentUser?.year || '',
     interests: currentUser?.interests || [],
@@ -159,10 +159,10 @@ const Profile: React.FC = () => {
                 {editMode ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>University</Label>
+                      <Label>Campus</Label>
                       <Input
-                        value={formData.university}
-                        onChange={(e) => setFormData({ ...formData, university: e.target.value })}
+                        value={formData.campus}
+                        onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
@@ -182,7 +182,7 @@ const Profile: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-foreground font-medium">{currentUser?.university}</p>
+                    <p className="text-foreground font-medium">{currentUser?.campus}</p>
                     <p className="text-muted-foreground">{currentUser?.major} • {currentUser?.year}</p>
                   </div>
                 )}
