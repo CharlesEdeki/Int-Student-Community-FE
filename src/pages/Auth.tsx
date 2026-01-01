@@ -54,8 +54,18 @@ const Auth: React.FC = () => {
       let success = false;
       if (mode === 'login') {
         success = await login(email, password);
+        if (!success) {
+          toast.error('Account not found. Please register first.');
+          setLoading(false);
+          return;
+        }
       } else {
         success = await register(email, password, name);
+        if (!success) {
+          toast.error('An account with this email already exists. Please login instead.');
+          setLoading(false);
+          return;
+        }
       }
 
       if (success) {
