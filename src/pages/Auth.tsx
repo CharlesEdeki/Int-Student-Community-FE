@@ -82,8 +82,8 @@ const Auth: React.FC = () => {
           <Globe className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">StudyConnect</h1>
-          <p className="text-sm text-muted-foreground">International Student Community</p>
+          <h1 className="text-2xl font-bold text-foreground">Edinburgh In't Students</h1>
+          <p className="text-sm text-muted-foreground">Community</p>
         </div>
       </div>
 

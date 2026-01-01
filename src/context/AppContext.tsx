@@ -7,7 +7,7 @@ export interface User {
   email: string;
   avatar: string;
   country: string;
-  university: string;
+  campus: string;
   major: string;
   year: string;
   bio: string;
@@ -104,7 +104,7 @@ export interface OnboardingData {
     bio: string;
   };
   study: {
-    university: string;
+    campus: string;
     major: string;
     year: string;
   };
@@ -161,7 +161,7 @@ interface AppContextType extends AppState {
 const defaultOnboardingData: OnboardingData = {
   step: 0,
   profile: { name: '', email: '', avatar: '', country: '', bio: '' },
-  study: { university: '', major: '', year: '' },
+  study: { campus: '', major: '', year: '' },
   interests: [],
   preferences: { groupSize: '', matchingPreference: '', languages: [], rotationPreference: 'undecided' },
 };
@@ -197,7 +197,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       email,
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
       country: 'United States',
-      university: 'Demo University',
+      campus: 'Merchiston',
       major: 'Undeclared',
       year: 'Freshman',
       bio: 'New member of the community!',
@@ -231,7 +231,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       email,
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
       country: '',
-      university: '',
+      campus: '',
       major: '',
       year: '',
       bio: '',
@@ -264,7 +264,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         name: onboardingData.profile.name || currentUser.name,
         country: onboardingData.profile.country,
         bio: onboardingData.profile.bio,
-        university: onboardingData.study.university,
+        campus: onboardingData.study.campus,
         major: onboardingData.study.major,
         year: onboardingData.study.year,
         interests: onboardingData.interests,

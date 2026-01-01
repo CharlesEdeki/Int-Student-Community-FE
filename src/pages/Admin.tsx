@@ -34,7 +34,7 @@ const AdminUsers: React.FC = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Country</TableHead>
-                <TableHead>University</TableHead>
+                <TableHead>Campus</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead></TableHead>
@@ -50,7 +50,7 @@ const AdminUsers: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>{user.country}</TableCell>
-                  <TableCell>{user.university}</TableCell>
+                  <TableCell>{user.campus}</TableCell>
                   <TableCell><Badge variant={user.isOnline ? 'default' : 'secondary'}>{user.isOnline ? 'Online' : 'Offline'}</Badge></TableCell>
                   <TableCell className="text-muted-foreground">{user.joinedAt}</TableCell>
                   <TableCell><Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button></TableCell>

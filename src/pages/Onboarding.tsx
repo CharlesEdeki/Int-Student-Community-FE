@@ -62,6 +62,10 @@ const Onboarding: React.FC = () => {
       }
     }
     if (step === 1) {
+      if (!onboardingData.study.campus) {
+        toast.error('Please select your campus');
+        return;
+      }
       if (!onboardingData.study.major) {
         toast.error('Please fill in your major');
         return;
@@ -78,7 +82,7 @@ const Onboarding: React.FC = () => {
       setStep(step + 1);
     } else {
       completeOnboarding();
-      toast.success('Welcome to StudyConnect! 🎉');
+      toast.success('Welcome to Edinburgh In\'t Students Community! 🎉');
       navigate('/dashboard');
     }
   };
@@ -190,6 +194,26 @@ const Onboarding: React.FC = () => {
           {/* Step 1: Studies */}
           {step === 1 && (
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Campus *</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['Merchiston', 'Craiglockhart', 'Sighthill'].map(campus => (
+                    <Badge
+                      key={campus}
+                      variant={onboardingData.study.campus === campus ? 'default' : 'outline'}
+                      className={`cursor-pointer transition-all hover:shadow-soft px-4 py-2
+                        ${onboardingData.study.campus === campus 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-secondary'}`}
+                      onClick={() => setOnboardingData({ 
+                        study: { ...onboardingData.study, campus } 
+                      })}
+                    >
+                      {campus}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="major">Major / Field of Study *</Label>
                 <Input

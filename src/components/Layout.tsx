@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Globe className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-bold text-foreground">StudyConnect</h1>
+            <h1 className="font-bold text-foreground">Edinburgh In't Students</h1>
             <p className="text-xs text-muted-foreground">Community</p>
           </div>
         </div>
