@@ -97,8 +97,8 @@
       "name": "Global Explorers",
       "description": "A diverse group of curious minds exploring life abroad together",
       "members": ["user-1", "user-2", "user-3", "user-4"],
-      "createdAt": "2024-11-01",
-      "expiresAt": "2024-12-15",
+      "createdAt": "2026-01-01",
+      "expiresAt": "2026-01-15",
       "iceBreakers": [
         "What's your favorite dish from your home country?",
         "Share a unique tradition from your culture!",
@@ -128,8 +128,8 @@
       "name": "Tech Innovators",
       "description": "Students passionate about technology and innovation",
       "members": ["user-1", "user-4", "user-5"],
-      "createdAt": "2024-10-01",
-      "expiresAt": "2024-11-15",
+      "createdAt": "2025-12-15",
+      "expiresAt": "2026-01-08",
       "iceBreakers": [],
       "checklist": [],
       "polls": []
