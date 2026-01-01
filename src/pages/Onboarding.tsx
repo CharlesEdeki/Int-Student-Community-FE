@@ -56,8 +56,8 @@ const Onboarding: React.FC = () => {
 
   const handleNext = () => {
     if (step === 0) {
-      if (!onboardingData.profile.name || !onboardingData.profile.country) {
-        toast.error('Please fill in your name and country');
+      if (!onboardingData.profile.country) {
+        toast.error('Please select your home country');
         return;
       }
     }
@@ -145,17 +145,6 @@ const Onboarding: React.FC = () => {
           {/* Step 0: Profile */}
           {step === 0 && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter your full name"
-                  value={onboardingData.profile.name}
-                  onChange={(e) => setOnboardingData({ 
-                    profile: { ...onboardingData.profile, name: e.target.value } 
-                  })}
-                />
-              </div>
               <div className="space-y-2">
                 <Label>Home Country *</Label>
                 <div className="flex flex-wrap gap-2">
