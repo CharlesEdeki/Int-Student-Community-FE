@@ -60,7 +60,7 @@ const Auth: React.FC = () => {
 
       if (success) {
         toast.success(mode === 'login' ? 'Welcome back!' : 'Account created successfully!');
-        navigate('/onboarding');
+        navigate(mode === 'login' ? '/dashboard' : '/onboarding');
       }
     } catch (error) {
       toast.error('Something went wrong. Please try again.');
