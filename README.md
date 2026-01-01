@@ -1,73 +1,172 @@
-# Welcome to your Lovable project
+# International Student Community Platform
 
-## Project info
+A vibrant web application connecting international students across campuses, facilitating networking, collaboration, and community building.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Overview
 
-## How can I edit this code?
+The **International Student Community Platform** is a modern social platform designed specifically for international students to connect with peers, build meaningful relationships, and engage with their community. Students can create and join interest-based groups, participate in events, chat with connections, and discover networking opportunities.
 
-There are several ways of editing your application.
+## Key Features
 
-**Use Lovable**
+- **User Profiles & Connections**: Create detailed profiles showcasing academic background, interests, languages, and campus location. Connect with other students and build your network.
+- **Groups & Communities**: Create or join groups based on shared interests, majors, or origins. Participate in group discussions and activities.
+- **Real-time Chat**: Direct messaging with connections for seamless communication.
+- **Event Management**: Discover, create, and attend campus events and community gatherings.
+- **Dashboard**: Personalized dashboard showing group rotations, upcoming events, connections, and notifications.
+- **Admin Features**: Administrative tools for user management, metrics tracking, and community announcements.
+- **Dark/Light Theme Support**: Enjoy the app in your preferred theme.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **UI Components**: shadcn/ui (built on Radix UI primitives)
+- **Styling**: Tailwind CSS with custom animations
+- **Forms**: React Hook Form + Zod validation
+- **Routing**: React Router v6
+- **State Management**: React Context API
+- **Data Fetching**: TanStack React Query
+- **Charts**: Recharts
+- **Notifications**: Sonner (toast notifications)
+- **Icons**: Lucide React
+- **Theme Support**: next-themes
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (v16 or higher) - [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- npm or bun package manager
 
-Follow these steps:
+### Installation
 
+1. **Clone the repository**:
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+cd Int-Student-Community-FE
 ```
 
-**Edit a file directly in GitHub**
+2. **Install dependencies**:
+```sh
+npm install
+# or
+bun install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. **Start the development server**:
+```sh
+npm run dev
+# or
+bun dev
+```
 
-**Use GitHub Codespaces**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Available Scripts
 
-## What technologies are used for this project?
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development with enhanced debugging
+- `npm run lint` - Run ESLint to check code quality
+- `npm run preview` - Preview production build locally
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```
+src/
+├── components/          # Reusable React components
+│   ├── ui/             # shadcn/ui components
+│   ├── Layout.tsx      # Main app layout wrapper
+│   └── NavLink.tsx     # Navigation components
+├── context/            # React Context for global state
+├── pages/              # Route page components
+│   ├── Auth.tsx        # Authentication
+│   ├── Dashboard.tsx   # Main dashboard
+│   ├── Group.tsx       # Group management
+│   ├── Chat.tsx        # Messaging
+│   ├── Events.tsx      # Event listing & management
+│   ├── Profile.tsx     # User profiles
+│   ├── Connections.tsx # Network management
+│   └── Admin.tsx       # Admin tools
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+└── demo-data/          # Sample data for development
+```
 
-## How can I deploy this project?
+## Features Overview
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Authentication
+Secure login and registration system for international students.
 
-## Can I connect a custom domain to my Lovable project?
+### Dashboard
+Personalized hub showing:
+- Active group memberships with rotation timers
+- Upcoming events
+- Recent messages and notifications
+- Quick access to all platform features
 
-Yes, you can!
+### Groups
+- Create communities based on interests, origins, or majors
+- Join existing groups to expand your network
+- Participate in group-specific discussions and activities
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Events
+- Discover and create campus events
+- RSVP to attend events
+- Stay updated with event notifications
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Connections
+- Build your network with other students
+- Send and receive connection requests
+- Manage your connections
+
+### Chat
+- Direct messaging with your connections
+- Real-time communication
+- Message history
+
+### Admin Panel
+- User management and analytics
+- Community metrics and insights
+- Broadcast announcements to the community
+
+## Development
+
+The project uses modern development practices:
+
+- **Type Safety**: Full TypeScript coverage
+- **Code Splitting**: Lazy-loaded route components for optimal performance
+- **Component Library**: shadcn/ui for consistent, accessible UI
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Form Validation**: Zod schemas with React Hook Form
+- **Linting**: ESLint configuration for code quality
+
+## Deployment
+
+Build the project for production:
+
+```sh
+npm run build
+```
+
+This generates an optimized build in the `dist/` directory, ready for deployment to any static hosting service.
+
+## Browser Support
+
+Modern browsers with ES2020+ support:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+- Code follows the ESLint configuration
+- TypeScript types are properly defined
+- Components follow shadcn/ui patterns
+- Changes are tested locally
+
+## License
+
+This project is part of the International Student Community Platform initiative.
