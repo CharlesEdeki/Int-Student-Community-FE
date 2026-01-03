@@ -51,26 +51,24 @@ const Auth: React.FC = () => {
     }
 
     try {
-      let success = false;
       if (mode === 'login') {
-        success = await login(email, password);
-        if (!success) {
-          toast.error('Account not found. Please register first.');
+        const response = await login(email, password);
+        if (!response.success) {
+          toast.error(response.errors[0] || 'Login failed. Please try again.');
           setLoading(false);
           return;
         }
+        toast.success('Welcome back!');
+        navigate('/dashboard');
       } else {
-        success = await register(email, password, name);
-        if (!success) {
-          toast.error('An account with this email already exists. Please login instead.');
+        const response = await register(email, password, name);
+        if (!response.success) {
+          toast.error(response.errors[0] || 'Registration failed. Please try again.');
           setLoading(false);
           return;
         }
-      }
-
-      if (success) {
-        toast.success(mode === 'login' ? 'Welcome back!' : 'Account created successfully!');
-        navigate(mode === 'login' ? '/dashboard' : '/onboarding');
+        toast.success('Account created successfully!');
+        navigate('/onboarding');
       }
     } catch (error) {
       toast.error('Something went wrong. Please try again.');
@@ -237,10 +235,10 @@ const Auth: React.FC = () => {
         </form>
       </Card>
 
-      {/* Demo hint */}
+      {/* API hint */}
       <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground animate-fade-in">
         <Sparkles className="w-4 h-4 text-accent" />
-        <span>Demo mode: Use any email to explore</span>
+        <span>Simulated .NET API - Check console for API logs</span>
       </div>
     </div>
   );

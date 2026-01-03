@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import demoData from '@/demo-data/data.json';
+import { authApi, usersApi, UserDto, ApiResponse } from '@/services/api';
 
 export interface User {
   id: string;
@@ -133,9 +134,9 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<ApiResponse<any>>;
   logout: () => void;
-  register: (email: string, password: string, name: string) => Promise<boolean>;
+  register: (email: string, password: string, name: string) => Promise<ApiResponse<any>>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   completeOnboarding: () => void;
   toggleAdmin: () => void;
@@ -184,55 +185,72 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     rotationPreference: 'undecided',
   });
 
-  const login = useCallback(async (email: string, _password: string): Promise<boolean> => {
-    const user = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (user) {
-      setState(prev => ({ ...prev, isAuthenticated: true, currentUser: user }));
-      return true;
-    }
-    // User not found - must register first
-    return false;
-  }, [state.users]);
+  // Helper to map API UserDto to local User type
+  const mapDtoToUser = (dto: UserDto): User => ({
+    id: dto.id,
+    name: dto.name,
+    email: dto.email,
+    avatar: dto.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
+    country: dto.country || '',
+    campus: dto.campus || '',
+    major: dto.major || '',
+    year: dto.year || '',
+    bio: dto.bio || '',
+    interests: dto.interests,
+    languages: dto.languages,
+    joinedAt: dto.createdAt.split('T')[0],
+    isOnline: dto.isOnline,
+  });
 
-  const logout = useCallback(() => {
+  const login = useCallback(async (email: string, password: string): Promise<ApiResponse<any>> => {
+    console.log('[AppContext] Calling POST /api/auth/login');
+    
+    const response = await authApi.login({ email, password });
+    
+    if (response.success && response.data) {
+      const user = mapDtoToUser(response.data.user);
+      setState(prev => ({ 
+        ...prev, 
+        isAuthenticated: true, 
+        currentUser: user,
+        users: [...prev.users.filter(u => u.id !== user.id), user],
+      }));
+    }
+    
+    return response;
+  }, []);
+
+  const logout = useCallback(async () => {
+    if (state.currentUser) {
+      console.log('[AppContext] Calling POST /api/auth/logout');
+      await authApi.logout(state.currentUser.id);
+    }
+    
     setState(prev => ({ 
       ...prev, 
       isAuthenticated: false, 
       currentUser: null,
       onboardingData: defaultOnboardingData 
     }));
-  }, []);
+  }, [state.currentUser]);
 
-  const register = useCallback(async (email: string, _password: string, name: string): Promise<boolean> => {
-    // Check if user already exists
-    const existingUser = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (existingUser) {
-      return false; // User already exists, must login instead
+  const register = useCallback(async (email: string, password: string, name: string): Promise<ApiResponse<any>> => {
+    console.log('[AppContext] Calling POST /api/auth/register');
+    
+    const response = await authApi.register({ email, password, name });
+    
+    if (response.success && response.data) {
+      const user = mapDtoToUser(response.data.user);
+      setState(prev => ({
+        ...prev,
+        users: [...prev.users, user],
+        currentUser: user,
+        isAuthenticated: true,
+      }));
     }
     
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name,
-      email,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-      country: '',
-      campus: '',
-      major: '',
-      year: '',
-      bio: '',
-      interests: [],
-      languages: [],
-      joinedAt: new Date().toISOString().split('T')[0],
-      isOnline: true,
-    };
-    setState(prev => ({
-      ...prev,
-      users: [...prev.users, newUser],
-      currentUser: newUser,
-      isAuthenticated: true,
-    }));
-    return true;
-  }, [state.users]);
+    return response;
+  }, []);
 
   const setOnboardingData = useCallback((data: Partial<OnboardingData>) => {
     setState(prev => ({
