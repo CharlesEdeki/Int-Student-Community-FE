@@ -1,0 +1,921 @@
+{
+  "info": {
+    "name": "Student Connect API",
+    "description": "Complete API collection for the Student Connect platform - .NET Backend with PostgreSQL",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://your-api.com/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.tokens) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.tokens.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.tokens.refreshToken);",
+                  "    pm.collectionVariables.set('userId', jsonData.data.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"country\": \"United States\",\n  \"bio\": \"Computer Science student passionate about AI\",\n  \"campus\": \"Merchiston\",\n  \"major\": \"Computer Science\",\n  \"year\": \"Senior\",\n  \"interests\": [\"Technology\", \"Music\", \"Travel\"],\n  \"languages\": [\"English\", \"Spanish\"],\n  \"avatarUrl\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Onboarding",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"United States\",\n  \"bio\": \"Excited to connect with fellow students!\",\n  \"campus\": \"Merchiston\",\n  \"major\": \"Computer Science\",\n  \"year\": \"Junior\",\n  \"interests\": [\"Technology\", \"Gaming\", \"Music\"],\n  \"groupSizePreference\": \"medium\",\n  \"matchingPreference\": \"diverse\",\n  \"languages\": [\"English\", \"Spanish\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/onboarding",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "onboarding"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "Get All Groups",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Group by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Innovators\",\n  \"description\": \"A group for tech enthusiasts\",\n  \"memberIds\": [\"user-1\", \"user-2\"],\n  \"expiresAt\": \"2026-02-01\",\n  \"iceBreakers\": [\n    \"What's your favorite programming language?\",\n    \"Share your latest project!\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Group Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Group",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Member to Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-3\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "members"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Member from Group",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/members/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "members", ":userId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "userId", "value": "user-3" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Groups",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "groups"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Checklist",
+      "item": [
+        {
+          "name": "Get Group Checklist",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/checklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "checklist"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Checklist Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Schedule group call\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/checklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "checklist"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Checklist Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/checklist/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "checklist", ":itemId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "itemId", "value": "task-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Checklist Item",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/checklist/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "checklist", ":itemId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "itemId", "value": "task-1" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Polls",
+      "item": [
+        {
+          "name": "Get Group Polls",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/polls",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "polls"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What should we do for our next meetup?\",\n  \"options\": [\n    { \"text\": \"Movie night\" },\n    { \"text\": \"Game session\" },\n    { \"text\": \"Study group\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/polls",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "polls"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionId\": \"opt-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/polls/:pollId/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "polls", ":pollId", "vote"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "pollId", "value": "poll-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Poll",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/polls/:pollId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "polls", ":pollId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "pollId", "value": "poll-1" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Group Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/messages?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "messages"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello everyone! 👋\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "messages"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Reaction to Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emoji\": \"👍\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/messages/:messageId/reactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "messages", ":messageId", "reactions"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "messageId", "value": "msg-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Reaction from Message",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/messages/:messageId/reactions/:emoji",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "messages", ":messageId", "reactions", ":emoji"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "messageId", "value": "msg-1" },
+                { "key": "emoji", "value": "👍" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/groups/:groupId/messages/:messageId",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", ":groupId", "messages", ":messageId"],
+              "variable": [
+                { "key": "groupId", "value": "group-1" },
+                { "key": "messageId", "value": "msg-1" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events?category=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                { "key": "category", "value": "all" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId"],
+              "variable": [
+                { "key": "eventId", "value": "event-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tech Talk: AI in Education\",\n  \"description\": \"Join us for an insightful discussion on AI applications in education.\",\n  \"date\": \"2026-02-15\",\n  \"time\": \"14:00\",\n  \"location\": \"Innovation Hub, Room 101\",\n  \"category\": \"Academic\",\n  \"maxAttendees\": 50,\n  \"imageUrl\": \"https://example.com/event-image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Event Title\",\n  \"description\": \"Updated description\",\n  \"time\": \"15:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId"],
+              "variable": [
+                { "key": "eventId", "value": "event-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId"],
+              "variable": [
+                { "key": "eventId", "value": "event-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Join Event (RSVP)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId/attendees",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId", "attendees"],
+              "variable": [
+                { "key": "eventId", "value": "event-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Leave Event",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/events/:eventId/attendees",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":eventId", "attendees"],
+              "variable": [
+                { "key": "eventId", "value": "event-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "events"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"read\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:notificationId",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":notificationId"],
+              "variable": [
+                { "key": "notificationId", "value": "notif-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "notifications", "read-all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:notificationId",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":notificationId"],
+              "variable": [
+                { "key": "notificationId", "value": "notif-1" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Announcements",
+      "item": [
+        {
+          "name": "Get All Announcements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/announcements",
+              "host": ["{{baseUrl}}"],
+              "path": ["announcements"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Announcement by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/announcements/:announcementId",
+              "host": ["{{baseUrl}}"],
+              "path": ["announcements", ":announcementId"],
+              "variable": [
+                { "key": "announcementId", "value": "ann-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Announcement (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Important Update\",\n  \"content\": \"This is an important announcement for all students.\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/announcements",
+              "host": ["{{baseUrl}}"],
+              "path": ["announcements"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Announcement (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"content\": \"Updated content\",\n  \"priority\": \"normal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/announcements/:announcementId",
+              "host": ["{{baseUrl}}"],
+              "path": ["announcements", ":announcementId"],
+              "variable": [
+                { "key": "announcementId", "value": "ann-1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Announcement (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/announcements/:announcementId",
+              "host": ["{{baseUrl}}"],
+              "path": ["announcements", ":announcementId"],
+              "variable": [
+                { "key": "announcementId", "value": "ann-1" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
