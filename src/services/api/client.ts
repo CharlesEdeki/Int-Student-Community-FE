@@ -6,9 +6,14 @@
 
 import type { ApiResponse, AuthTokens } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://your-dotnet-api.azurewebsites.net/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://undelusively-unscandalized-melissia.ngrok-free.dev/api';
 
-const TOKEN_STORAGE_KEY = 'isc_auth_tokens';
+// Log the API base URL being used (useful for debugging environment configuration)
+if (import.meta.env.DEV) {
+  console.log('[API Client] Using API Base URL:', API_BASE_URL);
+}
+
+const TOKEN_STORAGE_KEY = 'auth_tokens';
 
 // ===== Token Management =====
 
