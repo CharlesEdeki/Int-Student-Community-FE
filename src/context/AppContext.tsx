@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import demoData from '@/demo-data/data.json';
-import { authApi, usersApi, UserDto, ApiResponse } from '@/services/api';
+import { authApi } from '@/services/api/auth';
+import { usersApi } from '@/services/api/users';
+import { tokenManager } from '@/services/api/client';
+import type { UserDto, ApiResponse, CompleteProfileRequest } from '@/services/api/types';
 
 export interface User {
   id: string;
@@ -138,7 +141,7 @@ interface AppContextType extends AppState {
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<ApiResponse<any>>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
-  completeOnboarding: () => void;
+  completeOnboarding: () => Promise<ApiResponse<any>>;
   toggleAdmin: () => void;
   sendMessage: (groupId: string, content: string) => void;
   addReaction: (messageId: string, emoji: string) => void;
@@ -223,8 +226,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const logout = useCallback(async () => {
     if (state.currentUser) {
       console.log('[AppContext] Calling POST /api/auth/logout');
-      await authApi.logout(state.currentUser.id);
+      try { await authApi.logout(); } catch { /* ignore */ }
     }
+    tokenManager.clearTokens();
     
     setState(prev => ({ 
       ...prev, 
@@ -259,20 +263,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
-  const completeOnboarding = useCallback(() => {
+  const completeOnboarding = useCallback(async (): Promise<ApiResponse<any>> => {
     const { onboardingData, currentUser } = state;
-    if (currentUser) {
-      const updatedUser: User = {
-        ...currentUser,
-        name: onboardingData.profile.name || currentUser.name,
-        country: onboardingData.profile.country,
-        bio: onboardingData.profile.bio,
-        campus: onboardingData.study.campus,
-        major: onboardingData.study.major,
-        year: onboardingData.study.year,
-        interests: onboardingData.interests,
-        languages: onboardingData.preferences.languages,
-      };
+    if (!currentUser) {
+      return { success: false, data: null, message: 'Not authenticated', errors: ['User must be logged in'], statusCode: 401 };
+    }
+
+    console.log('[AppContext] Calling POST /api/users/:id/onboarding');
+    const profileData: CompleteProfileRequest = {
+      country: onboardingData.profile.country,
+      campus: onboardingData.study.campus,
+      major: onboardingData.study.major,
+      year: onboardingData.study.year,
+      bio: onboardingData.profile.bio || undefined,
+      interests: onboardingData.interests,
+      languages: onboardingData.preferences.languages,
+    };
+
+    const response = await usersApi.completeOnboarding(currentUser.id, profileData);
+
+    if (response.success && response.data) {
+      const updatedUser = mapDtoToUser(response.data);
       setState(prev => ({
         ...prev,
         currentUser: updatedUser,
@@ -280,6 +291,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         onboardingData: { ...prev.onboardingData, step: -1 },
       }));
     }
+
+    return response;
   }, [state]);
 
   const toggleAdmin = useCallback(() => {

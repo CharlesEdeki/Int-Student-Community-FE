@@ -54,7 +54,9 @@ const Onboarding: React.FC = () => {
     { title: 'Preferences', icon: Settings, description: 'Customize your experience' },
   ];
 
-  const handleNext = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleNext = async () => {
     if (step === 0) {
       if (!onboardingData.profile.country) {
         toast.error('Please select your home country');
@@ -81,9 +83,20 @@ const Onboarding: React.FC = () => {
     if (step < totalSteps - 1) {
       setStep(step + 1);
     } else {
-      completeOnboarding();
-      toast.success('Welcome to Edinburgh In\'t Students Community! 🎉');
-      navigate('/dashboard');
+      setLoading(true);
+      try {
+        const response = await completeOnboarding();
+        if (response.success) {
+          toast.success('Welcome to Edinburgh In\'t Students Community! 🎉');
+          navigate('/dashboard');
+        } else {
+          toast.error(response.errors?.[0] || 'Failed to complete profile. Please try again.');
+        }
+      } catch {
+        toast.error('Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -350,10 +363,20 @@ const Onboarding: React.FC = () => {
             </Button>
             <Button
               onClick={handleNext}
+              disabled={loading}
               className="gap-2 bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90"
             >
-              {step === totalSteps - 1 ? 'Complete Setup' : 'Continue'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                <>
+                  {step === totalSteps - 1 ? 'Complete Setup' : 'Continue'}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
