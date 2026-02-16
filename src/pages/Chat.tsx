@@ -16,11 +16,18 @@ import { format } from 'date-fns';
 const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '🎉', '🔥', '👏', '🚀', '💡'];
 
 const Chat: React.FC = () => {
-  const { getCurrentGroup, getUserById, messages, sendMessage, addReaction, currentUser } = useApp();
+  const { getCurrentGroup, getUserById, messages, sendMessage, addReaction, currentUser, loadGroupMessages } = useApp();
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const group = getCurrentGroup();
+
+  // Load messages from API when group changes
+  useEffect(() => {
+    if (group?.id) {
+      loadGroupMessages(group.id);
+    }
+  }, [group?.id, loadGroupMessages]);
 
   const groupMessages = messages.filter(m => m.groupId === group?.id);
   const members = group?.members.map(id => getUserById(id)).filter(Boolean) || [];
@@ -80,22 +87,12 @@ const Chat: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Phone className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Video className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Pin className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-5 h-5" />
-              </Button>
+              <Button variant="ghost" size="icon"><Phone className="w-5 h-5" /></Button>
+              <Button variant="ghost" size="icon"><Video className="w-5 h-5" /></Button>
+              <Button variant="ghost" size="icon"><Pin className="w-5 h-5" /></Button>
+              <Button variant="ghost" size="icon"><MoreVertical className="w-5 h-5" /></Button>
             </div>
           </div>
-
-          {/* Search */}
           <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -151,7 +148,6 @@ const Chat: React.FC = () => {
                         <p className="text-sm">{message.content}</p>
                       </div>
 
-                      {/* Reactions */}
                       {message.reactions.length > 0 && (
                         <div className={`flex gap-1 mt-1 ${isOwn ? 'justify-end' : ''}`}>
                           {message.reactions.map((reaction, rIdx) => (
@@ -167,7 +163,6 @@ const Chat: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Add Reaction Button */}
                       <Popover>
                         <PopoverTrigger asChild>
                           <button className={`mt-1 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity ${isOwn ? 'ml-auto' : ''}`}>
@@ -200,14 +195,10 @@ const Chat: React.FC = () => {
         {/* Message Input */}
         <div className="p-4 border-t border-border/50">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon">
-              <ImageIcon className="w-5 h-5" />
-            </Button>
+            <Button variant="ghost" size="icon"><ImageIcon className="w-5 h-5" /></Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Smile className="w-5 h-5" />
-                </Button>
+                <Button variant="ghost" size="icon"><Smile className="w-5 h-5" /></Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-2">
                 <div className="grid grid-cols-5 gap-1">
@@ -247,7 +238,6 @@ const Chat: React.FC = () => {
           <CardTitle className="text-lg">Members</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {/* Online */}
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Online — {onlineMembers.length}
           </p>
@@ -267,7 +257,6 @@ const Chat: React.FC = () => {
             </div>
           ))}
 
-          {/* Offline */}
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4 mb-2">
             Offline — {members.length - onlineMembers.length}
           </p>
