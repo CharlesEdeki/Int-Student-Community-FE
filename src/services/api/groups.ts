@@ -42,6 +42,10 @@ export const groupsApi = {
 
   // ===== Members =====
 
+  /** GET /api/groups/:id/members */
+  getMembers: (groupId: string): Promise<ApiResponse<GroupMemberDto[]>> =>
+    apiClient.get<GroupMemberDto[]>(`/groups/${groupId}/members`),
+
   /** POST /api/groups/:id/members */
   addMember: (groupId: string, userId: string): Promise<ApiResponse<GroupMemberDto>> =>
     apiClient.post<GroupMemberDto>(`/groups/${groupId}/members`, { userId }),

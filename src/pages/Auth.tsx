@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
+import { Globe, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 type AuthMode = 'login' | 'register' | 'forgot';
@@ -235,11 +235,6 @@ const Auth: React.FC = () => {
         </form>
       </Card>
 
-      {/* API hint */}
-      <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground animate-fade-in">
-        <Sparkles className="w-4 h-4 text-accent" />
-        <span>Simulated .NET API - Check console for API logs</span>
-      </div>
     </div>
   );
 };
