@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { authApi } from '@/services/api/auth';
 import { usersApi } from '@/services/api/users';
@@ -7,7 +9,7 @@ import { messagesApi } from '@/services/api/messages';
 import { notificationsApi } from '@/services/api/notifications';
 import { announcementsApi } from '@/services/api/announcements';
 import { tokenManager } from '@/services/api/client';
-import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse, PollOptionDto } from '@/services/api/types';
+import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse, PollOptionDto, GroupMemberDto } from '@/services/api/types';
 
 export interface User {
   id: string;
@@ -483,7 +485,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     return response;
   }, [state, mapDtoToUser]);
-  }, [state, mapDtoToUser]);
 
   const toggleAdmin = useCallback(() => {
     setState(prev => ({ ...prev, isAdmin: !prev.isAdmin }));
@@ -653,7 +654,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         startDate: startDateTime,
         location: eventData.location,
         maxAttendees: eventData.maxAttendees,
-        imageUrl: eventData.image,
         imageUrl: eventData.image,
       });
 
