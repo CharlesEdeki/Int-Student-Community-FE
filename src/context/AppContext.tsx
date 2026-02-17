@@ -7,7 +7,7 @@ import { messagesApi } from '@/services/api/messages';
 import { notificationsApi } from '@/services/api/notifications';
 import { announcementsApi } from '@/services/api/announcements';
 import { tokenManager } from '@/services/api/client';
-import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse } from '@/services/api/types';
+import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse, PollOptionDto } from '@/services/api/types';
 
 export interface User {
   id: string;
@@ -161,9 +161,6 @@ interface AppContextType extends AppState {
   getGroupById: (groupId: string) => Group | undefined;
   getCurrentGroup: () => Group | undefined;
   createPoll: (groupId: string, question: string, options: string[]) => Promise<void>;
-  addUser: (user: Omit<User, 'id'>) => Promise<void>;
-  updateUser: (userId: string, data: Partial<User>) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
   addAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt'>) => Promise<void>;
   setRotationPreference: (preference: 'rotate' | 'stay' | 'undecided') => void;
 }
@@ -214,19 +211,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }), []);
 
   // Map EventDto to local Event type
-  const mapDtoToEvent = useCallback((dto: EventDto): Event => ({
-    id: dto.id,
-    title: dto.title,
-    description: dto.description || '',
-    date: dto.startDate.split('T')[0],
-    time: dto.startDate.split('T')[1]?.substring(0, 5) || '',
-    location: dto.location || '',
-    category: dto.category || 'Social',
-    organizer: dto.organizerId,
-    attendees: [dto.organizerId], // Will be populated from API
-    maxAttendees: dto.maxAttendees || 30,
-    image: dto.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop',
-  }), []);
+  const mapDtoToEvent = useCallback((dto: EventDto): Event => {
+    const startDate = new Date(dto.startDate);
+    return {
+      id: dto.id,
+      title: dto.title,
+      description: dto.description || '',
+      date: startDate.toISOString().split('T')[0],
+      time: startDate.toISOString().split('T')[1]?.substring(0, 5) || '',
+      location: dto.location || '',
+      category: 'Social',
+      organizer: dto.organizerId,
+      attendees: [dto.organizerId],
+      maxAttendees: dto.maxAttendees || 30,
+      image: dto.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop',
+    };
+  }, []);
 
   // Map NotificationDto to local Notification type
   const mapDtoToNotification = useCallback((dto: NotificationDto): Notification => ({
@@ -416,7 +416,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     return response;
-  }, [state]);
+  }, [state, mapDtoToUser]);
 
   const toggleAdmin = useCallback(() => {
     setState(prev => ({ ...prev, isAdmin: !prev.isAdmin }));
@@ -556,15 +556,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!state.currentUser) return;
     
     try {
+      // Combine date and time into ISO format
+      const startDateTime = `${eventData.date}T${eventData.time}:00`;
+      
       const response = await eventsApi.create({
         title: eventData.title,
         description: eventData.description,
-        date: eventData.date,
-        time: eventData.time,
+        startDate: startDateTime,
         location: eventData.location,
-        category: eventData.category,
         maxAttendees: eventData.maxAttendees,
-        image: eventData.image,
+        imageUrl: eventData.image,
       });
 
       if (response.success && response.data) {
@@ -572,14 +573,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: response.data.id,
           title: response.data.title,
           description: response.data.description,
-          date: response.data.date,
-          time: response.data.time,
-          location: response.data.location,
-          category: response.data.category,
+          date: response.data.startDate.split('T')[0],
+          time: response.data.startDate.split('T')[1]?.substring(0, 5) || '',
+          location: response.data.location || '',
+          category: 'Social',
           organizer: response.data.organizerId,
-          attendees: response.data.attendeeIds || [state.currentUser.id],
-          maxAttendees: response.data.maxAttendees,
-          image: response.data.image,
+          attendees: [state.currentUser.id],
+          maxAttendees: response.data.maxAttendees || 30,
+          image: response.data.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=250&fit=crop',
         };
         setState(prev => ({ ...prev, events: [...prev.events, newEvent] }));
       }
@@ -676,51 +677,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return state.groups.find(g => g.id === state.currentGroupId);
   }, [state.groups, state.currentGroupId]);
 
-  const createPoll = useCallback((groupId: string, question: string, options: string[]) => {
-    const newPoll: Poll = {
-      id: `poll-${Date.now()}`,
-      question,
-      options: options.map((text, idx) => ({ id: `opt-${idx}`, text, votes: 0 })),
-      votedBy: [],
-    };
-    setState(prev => ({
-      ...prev,
-      groups: prev.groups.map(group =>
-        group.id === groupId ? { ...group, polls: [...group.polls, newPoll] } : group
-      ),
-    }));
+  const createPoll = useCallback(async (groupId: string, question: string, options: string[]) => {
+    try {
+      const response = await groupsApi.createPoll(groupId, { 
+        question, 
+        options: options.map(text => ({ text }))
+      });
+      
+      if (response.success && response.data) {
+        const newPoll: Poll = {
+          id: response.data.id,
+          question: response.data.question,
+          options: response.data.options.map((opt: PollOptionDto) => ({
+            id: opt.id,
+            text: opt.text,
+            votes: opt.voteCount,
+          })),
+          votedBy: [],
+        };
+        setState(prev => ({
+          ...prev,
+          groups: prev.groups.map(group =>
+            group.id === groupId ? { ...group, polls: [...group.polls, newPoll] } : group
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error('[AppContext] Failed to create poll:', error);
+    }
   }, []);
 
-  const addUser = useCallback((userData: Omit<User, 'id'>) => {
-    const newUser: User = { ...userData, id: `user-${Date.now()}` };
-    setState(prev => ({ ...prev, users: [...prev.users, newUser] }));
-  }, []);
+  const addAnnouncement = useCallback(async (data: Omit<Announcement, 'id' | 'createdAt'>) => {
+    if (!state.currentUser) return;
 
-  const updateUser = useCallback((userId: string, data: Partial<User>) => {
-    setState(prev => ({
-      ...prev,
-      users: prev.users.map(u => (u.id === userId ? { ...u, ...data } : u)),
-    }));
-  }, []);
+    try {
+      const response = await announcementsApi.create({
+        title: data.title,
+        content: data.content,
+        priority: (data.priority as 'high' | 'normal' | 'low') || 'normal',
+      });
 
-  const deleteUser = useCallback((userId: string) => {
-    setState(prev => ({
-      ...prev,
-      users: prev.users.filter(u => u.id !== userId),
-    }));
-  }, []);
-
-  const addAnnouncement = useCallback((data: Omit<Announcement, 'id' | 'createdAt'>) => {
-    const newAnnouncement: Announcement = {
-      ...data,
-      id: `ann-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setState(prev => ({
-      ...prev,
-      announcements: [newAnnouncement, ...prev.announcements],
-    }));
-  }, []);
+      if (response.success && response.data) {
+        const newAnnouncement = mapDtoToAnnouncement(response.data);
+        setState(prev => ({
+          ...prev,
+          announcements: [newAnnouncement, ...prev.announcements],
+        }));
+      }
+    } catch (error) {
+      console.error('[AppContext] Failed to create announcement:', error);
+    }
+  }, [state.currentUser, mapDtoToAnnouncement]);
 
   const setRotationPreference = useCallback((preference: 'rotate' | 'stay' | 'undecided') => {
     setState(prev => ({ ...prev, rotationPreference: preference }));
@@ -748,9 +755,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         getGroupById,
         getCurrentGroup,
         createPoll,
-        addUser,
-        updateUser,
-        deleteUser,
         addAnnouncement,
         setRotationPreference,
       }}
