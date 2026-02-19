@@ -6,19 +6,19 @@ import { apiClient } from './client';
 import type { ApiResponse, NotificationDto } from './types';
 
 export const notificationsApi = {
-  /** GET /api/users/:userId/notifications */
+  /** GET /api/Users/:userId/notifications */
   getAll: (userId: string): Promise<ApiResponse<NotificationDto[]>> =>
-    apiClient.get<NotificationDto[]>(`/users/${userId}/notifications`),
+    apiClient.get<NotificationDto[]>(`/Users/${userId}/notifications`),
 
-  /** PATCH /api/notifications/:id */
+  /** PATCH /api/Notifications/:id */
   markAsRead: (notificationId: string): Promise<ApiResponse<NotificationDto>> =>
-    apiClient.patch<NotificationDto>(`/notifications/${notificationId}`, { read: true }),
+    apiClient.patch<NotificationDto>(`/Notifications/${notificationId}`, { read: true }),
 
-  /** POST /api/users/:userId/notifications/read-all */
+  /** POST /api/Users/:userId/notifications/read-all */
   markAllAsRead: (userId: string): Promise<ApiResponse<null>> =>
-    apiClient.post<null>(`/users/${userId}/notifications/read-all`),
+    apiClient.post<null>(`/Users/${userId}/notifications/read-all`),
 
-  /** DELETE /api/notifications/:id */
+  /** DELETE /api/Notifications/:id */
   delete: (notificationId: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/notifications/${notificationId}`),
+    apiClient.delete<null>(`/Notifications/${notificationId}`),
 };

@@ -4,6 +4,7 @@
 
 export { authApi } from './auth';
 export { usersApi } from './users';
+export { profileApi } from './profile';
 export { groupsApi } from './groups';
 export { eventsApi } from './events';
 export { messagesApi } from './messages';

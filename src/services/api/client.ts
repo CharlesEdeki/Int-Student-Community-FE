@@ -136,8 +136,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
     }
   }
 
-  const result: ApiResponse<T> = await response.json();
-  return result;
+  const data = await response.json();
+  
+  // Wrap response to ensure ApiResponse structure
+  // Backend may not include success flag, so check HTTP status
+  if (data && typeof data === 'object' && 'success' in data) {
+    // Response already has ApiResponse structure
+    return data as ApiResponse<T>;
+  }
+  
+  // Backend returned raw data, wrap it based on HTTP status
+  const isSuccess = response.ok; // true for 2xx, false otherwise
+  
+  return {
+    success: isSuccess,
+    data: isSuccess ? (data as T) : null,
+    message: data?.message || (isSuccess ? 'Success' : 'Error'),
+    errors: isSuccess ? [] : [data?.message || 'Unknown error'],
+    statusCode: response.status,
+  };
 }
 
 // ===== Exported HTTP Methods =====

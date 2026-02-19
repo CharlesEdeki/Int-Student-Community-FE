@@ -288,27 +288,6 @@ const Onboarding: React.FC = () => {
           {step === 3 && (
             <div className="space-y-6">
               <div className="space-y-3">
-                <Label>Preferred Group Size</Label>
-                <div className="flex gap-3">
-                  {['Small (3-4)', 'Medium (5-6)', 'Large (7-8)'].map(size => (
-                    <Badge
-                      key={size}
-                      variant={onboardingData.preferences.groupSize === size ? 'default' : 'outline'}
-                      className={`cursor-pointer transition-all px-4 py-2
-                        ${onboardingData.preferences.groupSize === size 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'hover:bg-secondary'}`}
-                      onClick={() => setOnboardingData({ 
-                        preferences: { ...onboardingData.preferences, groupSize: size } 
-                      })}
-                    >
-                      {size}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
                 <Label>Matching Preference</Label>
                 <div className="flex flex-wrap gap-3">
                   {['Same Country', 'Different Countries', 'No Preference'].map(pref => (

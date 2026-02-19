@@ -20,73 +20,78 @@ import type {
 export const groupsApi = {
   // ===== Groups CRUD =====
 
-  /** GET /api/groups */
-  getAll: (): Promise<ApiResponse<GroupDto[]>> =>
-    apiClient.get<GroupDto[]>('/groups'),
+  /** GET /api/Groups/:userId - Get groups for a specific user */
+  getAll: (userId?: string): Promise<ApiResponse<GroupDto[]>> => {
+    if (userId) {
+      return apiClient.get<GroupDto[]>(`/Groups/${userId}`);
+    }
+    // Fallback for fetching all groups
+    return apiClient.get<GroupDto[]>('/Groups');
+  },
 
-  /** GET /api/groups/:id */
+  /** GET /api/Groups/:id */
   getById: (id: string): Promise<ApiResponse<GroupDto>> =>
-    apiClient.get<GroupDto>(`/groups/${id}`),
+    apiClient.get<GroupDto>(`/Groups/${id}`),
 
-  /** POST /api/groups */
+  /** POST /api/Groups */
   create: (data: CreateGroupRequest): Promise<ApiResponse<GroupDto>> =>
-    apiClient.post<GroupDto>('/groups', data),
+    apiClient.post<GroupDto>('/Groups', data),
 
-  /** PUT /api/groups/:id */
+  /** PUT /api/Groups/:id */
   update: (id: string, data: UpdateGroupRequest): Promise<ApiResponse<GroupDto>> =>
-    apiClient.put<GroupDto>(`/groups/${id}`, data),
+    apiClient.put<GroupDto>(`/Groups/${id}`, data),
 
-  /** DELETE /api/groups/:id */
+  /** DELETE /api/Groups/:id */
   delete: (id: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/groups/${id}`),
+    apiClient.delete<null>(`/Groups/${id}`),
 
   // ===== Members =====
 
-  /** GET /api/groups/:id/members */
+  /** GET /api/Groups/:id/members */
   getMembers: (groupId: string): Promise<ApiResponse<GroupMemberDto[]>> =>
-    apiClient.get<GroupMemberDto[]>(`/groups/${groupId}/members`),
+    apiClient.get<GroupMemberDto[]>(`/Groups/${groupId}/members`),
 
-  /** POST /api/groups/:id/members */
+  /** POST /api/Groups/:id/members */
   addMember: (groupId: string, userId: string): Promise<ApiResponse<GroupMemberDto>> =>
-    apiClient.post<GroupMemberDto>(`/groups/${groupId}/members`, { userId }),
+    apiClient.post<GroupMemberDto>(`/Groups/${groupId}/members`, { userId }),
 
-  /** DELETE /api/groups/:id/members/:userId */
+  /** DELETE /api/Groups/:id/members/:userId */
   removeMember: (groupId: string, userId: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/groups/${groupId}/members/${userId}`),
+    apiClient.delete<null>(`/Groups/${groupId}/members/${userId}`),
 
   // ===== Checklist =====
 
-  /** GET /api/groups/:id/checklist */
+  /** GET /api/Groups/:id/checklist */
   getChecklist: (groupId: string): Promise<ApiResponse<ChecklistItemDto[]>> =>
-    apiClient.get<ChecklistItemDto[]>(`/groups/${groupId}/checklist`),
+    apiClient.get<ChecklistItemDto[]>(`/Groups/${groupId}/checklist`),
 
-  /** POST /api/groups/:id/checklist */
+  /** POST /api/Groups/:id/checklist */
   addChecklistItem: (groupId: string, data: CreateChecklistItemRequest): Promise<ApiResponse<ChecklistItemDto>> =>
-    apiClient.post<ChecklistItemDto>(`/groups/${groupId}/checklist`, data),
+    apiClient.post<ChecklistItemDto>(`/Groups/${groupId}/checklist`, data),
 
-  /** PATCH /api/groups/:id/checklist/:itemId */
+  /** PATCH /api/Groups/:id/checklist/:itemId */
   toggleChecklistItem: (groupId: string, itemId: string, data: ToggleChecklistItemRequest): Promise<ApiResponse<ChecklistItemDto>> =>
-    apiClient.patch<ChecklistItemDto>(`/groups/${groupId}/checklist/${itemId}`, data),
+    apiClient.patch<ChecklistItemDto>(`/Groups/${groupId}/checklist/${itemId}`, data),
 
-  /** DELETE /api/groups/:id/checklist/:itemId */
+  /** DELETE /api/Groups/:id/checklist/:itemId */
   deleteChecklistItem: (groupId: string, itemId: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/groups/${groupId}/checklist/${itemId}`),
+    apiClient.delete<null>(`/Groups/${groupId}/checklist/${itemId}`),
 
   // ===== Polls =====
 
-  /** GET /api/groups/:id/polls */
+  /** GET /api/Groups/:id/polls */
   getPolls: (groupId: string): Promise<ApiResponse<PollDto[]>> =>
-    apiClient.get<PollDto[]>(`/groups/${groupId}/polls`),
+    apiClient.get<PollDto[]>(`/Groups/${groupId}/polls`),
 
-  /** POST /api/groups/:id/polls */
+  /** POST /api/Groups/:id/polls */
   createPoll: (groupId: string, data: CreatePollRequest): Promise<ApiResponse<PollDto>> =>
-    apiClient.post<PollDto>(`/groups/${groupId}/polls`, data),
+    apiClient.post<PollDto>(`/Groups/${groupId}/polls`, data),
 
-  /** POST /api/groups/:id/polls/:pollId/vote */
+  /** POST /api/Groups/:id/polls/:pollId/vote */
   votePoll: (groupId: string, pollId: string, data: VotePollRequest): Promise<ApiResponse<null>> =>
-    apiClient.post<null>(`/groups/${groupId}/polls/${pollId}/vote`, data),
+    apiClient.post<null>(`/Groups/${groupId}/polls/${pollId}/vote`, data),
 
-  /** DELETE /api/groups/:id/polls/:pollId */
+  /** DELETE /api/Groups/:id/polls/:pollId */
   deletePoll: (groupId: string, pollId: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/groups/${groupId}/polls/${pollId}`),
+    apiClient.delete<null>(`/Groups/${groupId}/polls/${pollId}`),
 };

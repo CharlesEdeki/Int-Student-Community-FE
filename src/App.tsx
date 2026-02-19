@@ -18,11 +18,6 @@ const Profile = lazy(() => import("@/pages/Profile"));
 const Connections = lazy(() => import("@/pages/Connections"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
-// Lazy load admin components
-const AdminUsers = lazy(() => import("@/pages/Admin").then(m => ({ default: m.AdminUsers })));
-const AdminMetrics = lazy(() => import("@/pages/Admin").then(m => ({ default: m.AdminMetrics })));
-const AdminAnnouncements = lazy(() => import("@/pages/Admin").then(m => ({ default: m.AdminAnnouncements })));
-
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -33,6 +28,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const { isAuthenticated, onboardingData } = useApp();
+  
+  if (typeof window !== 'undefined') {
+    console.log('[AppRoutes] isAuthenticated:', isAuthenticated);
+  }
   
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
@@ -45,9 +44,6 @@ const AppRoutes = () => {
         <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/connections" element={<ProtectedRoute><Connections /></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-        <Route path="/admin/metrics" element={<ProtectedRoute><AdminMetrics /></ProtectedRoute>} />
-        <Route path="/admin/announcements" element={<ProtectedRoute><AdminAnnouncements /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/auth" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

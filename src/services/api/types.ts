@@ -46,9 +46,16 @@ export interface AuthTokens {
   tokenType: string;
 }
 
+// Backend response structure for registration and login
 export interface AuthResponse {
-  user: UserDto;
-  tokens: AuthTokens;
+  email: string;
+  firstName: string;
+  lastName: string;
+  message: string;
+  phoneCode: string | null;
+  phoneNumber: string | null;
+  token: string;
+  userId: number;
 }
 
 // ===== Users =====

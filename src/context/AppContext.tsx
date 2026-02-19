@@ -9,7 +9,7 @@ import { messagesApi } from '@/services/api/messages';
 import { notificationsApi } from '@/services/api/notifications';
 import { announcementsApi } from '@/services/api/announcements';
 import { tokenManager } from '@/services/api/client';
-import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse, PollOptionDto, GroupMemberDto } from '@/services/api/types';
+import type { UserDto, ApiResponse, CompleteProfileRequest, GroupDto, EventDto, MessageDto, NotificationDto, AnnouncementDto, AuthResponse, AuthTokens, PollOptionDto, GroupMemberDto } from '@/services/api/types';
 
 export interface User {
   id: string;
@@ -120,7 +120,6 @@ export interface OnboardingData {
   };
   interests: string[];
   preferences: {
-    groupSize: string;
     matchingPreference: string;
     languages: string[];
     rotationPreference: 'rotate' | 'stay' | 'undecided';
@@ -129,7 +128,6 @@ export interface OnboardingData {
 
 interface AppState {
   isAuthenticated: boolean;
-  isAdmin: boolean;
   currentUser: User | null;
   users: User[];
   groups: Group[];
@@ -150,7 +148,6 @@ interface AppContextType extends AppState {
   register: (email: string, password: string, name: string) => Promise<ApiResponse<AuthResponse | null>>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   completeOnboarding: () => Promise<ApiResponse<UserDto | null>>;
-  toggleAdmin: () => void;
   sendMessage: (groupId: string, content: string) => Promise<void>;
   addReaction: (messageId: string, emoji: string) => Promise<void>;
   toggleChecklistItem: (groupId: string, itemId: string) => Promise<void>;
@@ -173,15 +170,18 @@ const defaultOnboardingData: OnboardingData = {
   profile: { name: '', email: '', avatar: '', country: '', bio: '' },
   study: { campus: '', major: '', year: '' },
   interests: [],
-  preferences: { groupSize: '', matchingPreference: '', languages: [], rotationPreference: 'undecided' },
+  preferences: { matchingPreference: '', languages: [], rotationPreference: 'undecided' },
 };
+
+// Default group size configuration
+const DEFAULT_GROUP_SIZE = 6;
+const GROUP_EXPIRATION_DAYS = 14;
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>({
     isAuthenticated: !!tokenManager.getAccessToken(),
-    isAdmin: false,
     currentUser: null,
     users: [],
     groups: [],
@@ -252,111 +252,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }), []);
 
   // Load initial data on mount (only if authenticated)
+  // Clear tokens on app mount to force logout on every page load/refresh
+  // Users must login each time they load the app or server restarts
   useEffect(() => {
-    if (!tokenManager.getAccessToken()) return;
-
-    const loadInitialData = async () => {
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-
-        // Fetch all data in parallel
-        const [usersRes, groupsRes, eventsRes, announcementsRes] = await Promise.all([
-          usersApi.getAll(),
-          groupsApi.getAll(),
-          eventsApi.getAll(),
-          announcementsApi.getAll(),
-        ]);
-
-        const users = usersRes.success && usersRes.data ? usersRes.data.map(mapDtoToUser) : [];
-        
-        let groups: Group[] = [];
-        if (groupsRes.success && groupsRes.data) {
-          // For each group, fetch members
-          groups = await Promise.all(groupsRes.data.map(async (dto: GroupDto) => {
-            let memberIds: string[] = [];
-            try {
-              const membersRes = await groupsApi.getMembers(dto.id);
-              if (membersRes.success && membersRes.data) {
-                memberIds = (membersRes.data as GroupMemberDto[]).map((m: GroupMemberDto) => m.userId);
-              }
-            } catch { /* ignore */ }
-
-            // Fetch checklist
-            let checklist: ChecklistItem[] = [];
-            try {
-              const checklistRes = await groupsApi.getChecklist(dto.id);
-              if (checklistRes.success && checklistRes.data) {
-                checklist = checklistRes.data.map(item => ({
-                  id: item.id,
-                  title: item.title,
-                  completed: item.isCompleted,
-                }));
-              }
-            } catch { /* ignore */ }
-
-            // Fetch polls
-            let polls: Poll[] = [];
-            try {
-              const pollsRes = await groupsApi.getPolls(dto.id);
-              if (pollsRes.success && pollsRes.data) {
-                polls = pollsRes.data.map(p => ({
-                  id: p.id,
-                  question: p.question,
-                  options: p.options.map(o => ({
-                    id: o.id,
-                    text: o.text,
-                    votes: o.voteCount,
-                  })),
-                  votedBy: [],
-                }));
-              }
-            } catch { /* ignore */ }
-
-            return {
-              id: dto.id,
-              name: dto.name,
-              description: dto.description || '',
-              members: memberIds,
-              createdAt: dto.createdAt,
-              expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              iceBreakers: [],
-              checklist,
-              polls,
-            };
-          }));
-        }
-
-        const events = eventsRes.success && eventsRes.data ? eventsRes.data.map(mapDtoToEvent) : [];
-        const announcements = announcementsRes.success && announcementsRes.data ? announcementsRes.data.map(mapDtoToAnnouncement) : [];
-
-        setState(prev => ({ 
-          ...prev, 
-          users,
-          groups,
-          currentGroupId: groups[0]?.id || null,
-          events,
-          announcements,
-          loading: false,
-        }));
-      } catch (error) {
-        console.error('[AppContext] Failed to load initial data:', error);
-        setState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: error instanceof Error ? error.message : 'Failed to load data' 
-        }));
-      }
-    };
-
-    loadInitialData();
-  }, [mapDtoToUser, mapDtoToEvent, mapDtoToAnnouncement]);
+    tokenManager.clearTokens();
+    setState(prev => ({
+      ...prev,
+      isAuthenticated: false,
+      currentUser: null,
+      onboardingData: defaultOnboardingData,
+    }));
+  }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<ApiResponse<AuthResponse | null>> => {
     const response = await authApi.login({ email, password });
     
     if (response.success && response.data) {
-      authApi.saveTokens(response.data.tokens);
-      const user = mapDtoToUser(response.data.user);
+      // Backend returns { token, email, firstName, lastName, userId }
+      const backendData = response.data;
+      const tokens: AuthTokens = {
+        accessToken: backendData.token,
+        refreshToken: '',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+      };
+      
+      authApi.saveTokens(tokens);
+      
+      // Create user object from response data
+      const user: User = {
+        id: backendData.userId.toString(),
+        name: `${backendData.firstName} ${backendData.lastName}`,
+        email: backendData.email,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
+        country: '',
+        campus: '',
+        major: '',
+        year: '',
+        bio: '',
+        interests: [],
+        languages: [],
+        joinedAt: new Date().toISOString().split('T')[0],
+        isOnline: true,
+      };
       
       // Fetch user notifications
       let notifications: Notification[] = [];
@@ -369,10 +307,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       // Fetch groups, events, announcements after login
       const [groupsRes, eventsRes, announcementsRes, usersRes] = await Promise.all([
-        groupsApi.getAll(),
-        eventsApi.getAll(),
-        announcementsApi.getAll(),
-        usersApi.getAll(),
+        groupsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+        eventsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+        announcementsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+        usersApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
       ]);
 
       const users = usersRes.success && usersRes.data ? usersRes.data.map(mapDtoToUser) : [];
@@ -435,18 +373,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const response = await authApi.register({ email, password, name });
     
     if (response.success && response.data) {
-      authApi.saveTokens(response.data.tokens);
-      const user = mapDtoToUser(response.data.user);
+      // Backend returns { token, email, firstName, lastName, userId }
+      const backendData = response.data;
+      const tokens: AuthTokens = {
+        accessToken: backendData.token,
+        refreshToken: '',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+      };
+      
+      authApi.saveTokens(tokens);
+      
+      // Create user object from response data
+      const user: User = {
+        id: backendData.userId.toString(),
+        name: `${backendData.firstName} ${backendData.lastName}`,
+        email: backendData.email,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
+        country: '',
+        campus: '',
+        major: '',
+        year: '',
+        bio: '',
+        interests: [],
+        languages: [],
+        joinedAt: new Date().toISOString().split('T')[0],
+        isOnline: true,
+      };
       
       setState(prev => ({
         ...prev,
         currentUser: user,
         isAuthenticated: true,
       }));
+      
+      console.log('Register: Set isAuthenticated to true', user);
     }
     
     return response;
-  }, [mapDtoToUser]);
+  }, []);
 
   const setOnboardingData = useCallback((data: Partial<OnboardingData>) => {
     setState(prev => ({
@@ -475,20 +440,74 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     if (response.success && response.data) {
       const updatedUser = mapDtoToUser(response.data);
-      setState(prev => ({
-        ...prev,
-        currentUser: updatedUser,
-        users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
-        onboardingData: { ...prev.onboardingData, step: -1 },
-      }));
+
+      // Create or find a group based on user interests
+      try {
+        const newExpirationDate = new Date();
+        newExpirationDate.setDate(newExpirationDate.getDate() + GROUP_EXPIRATION_DAYS);
+
+        // Create a group name based on primary interests
+        const primaryInterests = onboardingData.interests.slice(0, 2);
+        const groupName = `${primaryInterests.join(' & ')} Enthusiasts`;
+        const groupDescription = `Connect with fellow students interested in ${primaryInterests.join(', ')}`;
+        const category = primaryInterests[0] || 'General';
+
+        // Create group
+        const groupResponse = await groupsApi.create({
+          name: groupName,
+          description: groupDescription,
+          category,
+          memberIds: [currentUser.id],
+        });
+
+        if (groupResponse.success && groupResponse.data) {
+          const newGroup: Group = {
+            id: groupResponse.data.id,
+            name: groupResponse.data.name,
+            description: groupResponse.data.description || '',
+            members: [currentUser.id],
+            createdAt: groupResponse.data.createdAt,
+            expiresAt: newExpirationDate.toISOString(),
+            iceBreakers: [
+              'What drew you to this interest group?',
+              'What\'s your favorite project or experience in this area?',
+              'What would you like to learn from this group?',
+            ],
+            checklist: [],
+            polls: [],
+          };
+
+          setState(prev => ({
+            ...prev,
+            currentUser: updatedUser,
+            users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
+            groups: [newGroup, ...prev.groups],
+            currentGroupId: newGroup.id,
+            onboardingData: { ...prev.onboardingData, step: -1 },
+          }));
+        } else {
+          // Group creation failed, but profile was updated
+          setState(prev => ({
+            ...prev,
+            currentUser: updatedUser,
+            users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
+            onboardingData: { ...prev.onboardingData, step: -1 },
+          }));
+        }
+      } catch (error) {
+        console.error('[AppContext] Failed to create group:', error);
+        // Continue with profile update even if group creation fails
+        setState(prev => ({
+          ...prev,
+          currentUser: updatedUser,
+          users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
+          onboardingData: { ...prev.onboardingData, step: -1 },
+        }));
+      }
     }
 
     return response;
   }, [state, mapDtoToUser]);
-
-  const toggleAdmin = useCallback(() => {
-    setState(prev => ({ ...prev, isAdmin: !prev.isAdmin }));
-  }, []);
 
   const sendMessage = useCallback(async (groupId: string, content: string) => {
     if (!state.currentUser) return;
@@ -830,7 +849,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         register,
         setOnboardingData,
         completeOnboarding,
-        toggleAdmin,
         sendMessage,
         addReaction,
         toggleChecklistItem,

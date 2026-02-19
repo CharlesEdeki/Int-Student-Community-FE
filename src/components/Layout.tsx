@@ -3,11 +3,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { 
   LayoutDashboard, Users, MessageCircle, Calendar, User, 
-  Link as LinkIcon, Settings, Shield, LogOut, Globe, Bell
+  Link as LinkIcon, Settings, LogOut, Globe
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 
 interface LayoutProps {
@@ -23,14 +22,8 @@ const navItems = [
   { path: '/profile', label: 'Profile', icon: User },
 ];
 
-const adminItems = [
-  { path: '/admin/users', label: 'User Management', icon: Users },
-  { path: '/admin/metrics', label: 'Metrics', icon: LayoutDashboard },
-  { path: '/admin/announcements', label: 'Announcements', icon: Bell },
-];
-
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { currentUser, isAdmin, toggleAdmin, logout, notifications } = useApp();
+  const { currentUser, logout, notifications } = useApp();
   const location = useLocation();
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -74,40 +67,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </NavLink>
           ))}
 
-          {/* Admin Toggle */}
-          <div className="pt-4">
-            <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Admin Mode</span>
-              </div>
-              <Switch checked={isAdmin} onCheckedChange={toggleAdmin} />
-            </div>
-          </div>
 
-          {/* Admin Navigation */}
-          {isAdmin && (
-            <div className="pt-2 space-y-1">
-              <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Admin Panel
-              </p>
-              {adminItems.map(item => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                    ${isActive 
-                      ? 'bg-accent text-accent-foreground shadow-soft' 
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent'}
-                  `}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )}
         </nav>
 
         {/* User Section */}
