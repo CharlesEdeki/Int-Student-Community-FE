@@ -6,6 +6,7 @@ import { apiClient } from './client';
 import type {
   ApiResponse,
   GroupDto,
+  UserGroupsResponse,
   CreateGroupRequest,
   UpdateGroupRequest,
   GroupMemberDto,
@@ -20,22 +21,22 @@ import type {
 export const groupsApi = {
   // ===== Groups CRUD =====
 
-  /** GET /api/Groups/:userId - Get groups for a specific user */
-  getAll: (userId?: string): Promise<ApiResponse<GroupDto[]>> => {
+  /** GET /api/Users/:userId/groups - Get groups for a specific user */
+  getAll: (userId?: string): Promise<ApiResponse<UserGroupsResponse>> => {
     if (userId) {
-      return apiClient.get<GroupDto[]>(`/Groups/${userId}`);
+      return apiClient.get<UserGroupsResponse>(`/Users/${userId}/groups`);
     }
-    // Fallback for fetching all groups
-    return apiClient.get<GroupDto[]>('/Groups');
+    // Fallback - this may not work as expected
+    return apiClient.get<UserGroupsResponse>('/Groups');
   },
 
   /** GET /api/Groups/:id */
   getById: (id: string): Promise<ApiResponse<GroupDto>> =>
     apiClient.get<GroupDto>(`/Groups/${id}`),
 
-  /** POST /api/Groups */
-  create: (data: CreateGroupRequest): Promise<ApiResponse<GroupDto>> =>
-    apiClient.post<GroupDto>('/Groups', data),
+  /** POST /api/Users/:userId/groups - Add user to group (managed via onboarding) */
+  create: (userId: string, data: CreateGroupRequest): Promise<ApiResponse<GroupDto>> =>
+    apiClient.post<GroupDto>(`/Users/${userId}/groups`, data),
 
   /** PUT /api/Groups/:id */
   update: (id: string, data: UpdateGroupRequest): Promise<ApiResponse<GroupDto>> =>

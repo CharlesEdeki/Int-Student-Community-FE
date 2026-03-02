@@ -19,7 +19,7 @@ const Chat: React.FC = () => {
   const { getCurrentGroup, getUserById, messages, sendMessage, addReaction, currentUser, loadGroupMessages } = useApp();
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const group = getCurrentGroup();
 
   // Load messages from API when group changes
@@ -29,12 +29,22 @@ const Chat: React.FC = () => {
     }
   }, [group?.id, loadGroupMessages]);
 
-  const groupMessages = messages.filter(m => m.groupId === group?.id);
-  const members = group?.members.map(id => getUserById(id)).filter(Boolean) || [];
-  const onlineMembers = members.filter(m => m?.isOnline);
+  const groupMessages = messages
+    .filter(m => m.groupId === group?.id)
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const totalMembers = group?.memberCount || 0;
+  const onlineUsers = group?.onlineCount || 0;
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      // Find the ScrollArea's viewport (parent of the content container)
+      const viewport = messagesContainerRef.current.parentElement?.parentElement;
+      if (viewport) {
+        setTimeout(() => {
+          viewport.scrollTop = viewport.scrollHeight;
+        }, 0);
+      }
+    }
   };
 
   useEffect(() => {
@@ -82,7 +92,7 @@ const Chat: React.FC = () => {
               <div>
                 <CardTitle className="text-lg">{group.name}</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {onlineMembers.length} online • {members.length} members
+                  {onlineUsers} online • {totalMembers} members
                 </p>
               </div>
             </div>
@@ -106,8 +116,8 @@ const Chat: React.FC = () => {
 
         {/* Messages */}
         <CardContent className="flex-1 p-0 overflow-hidden">
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-4">
+          <ScrollArea className="h-full">
+            <div className="space-y-4 p-4" ref={messagesContainerRef}>
               {filteredMessages.map((message, idx) => {
                 const sender = getUserById(message.senderId);
                 const isOwn = message.senderId === currentUser?.id;
@@ -187,7 +197,6 @@ const Chat: React.FC = () => {
                   </div>
                 );
               })}
-              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
         </CardContent>
@@ -237,41 +246,19 @@ const Chat: React.FC = () => {
         <CardHeader className="pb-4">
           <CardTitle className="text-lg">Members</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Online — {onlineMembers.length}
-          </p>
-          {onlineMembers.map(member => (
-            <div key={member?.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="relative">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={member?.avatar} alt={member?.name} />
-                  <AvatarFallback>{member?.name?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-background" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{member?.name}</p>
-                <p className="text-xs text-muted-foreground">{member?.country}</p>
-              </div>
-            </div>
-          ))}
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Online — {onlineUsers}
+            </p>
+            <p className="text-sm text-muted-foreground">Members are displayed here when real-time data is available.</p>
+          </div>
 
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-4 mb-2">
-            Offline — {members.length - onlineMembers.length}
-          </p>
-          {members.filter(m => !m?.isOnline).map(member => (
-            <div key={member?.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors opacity-60">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={member?.avatar} alt={member?.name} />
-                <AvatarFallback>{member?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium text-foreground">{member?.name}</p>
-                <p className="text-xs text-muted-foreground">{member?.country}</p>
-              </div>
-            </div>
-          ))}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Offline — {totalMembers - onlineUsers}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

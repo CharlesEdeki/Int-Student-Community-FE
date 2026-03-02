@@ -14,7 +14,8 @@ const Auth: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useApp();
   const navigate = useNavigate();
@@ -44,8 +45,8 @@ const Auth: React.FC = () => {
       return;
     }
 
-    if (mode === 'register' && !name) {
-      toast.error('Please enter your name');
+    if (mode === 'register' && (!firstName || !lastName)) {
+      toast.error('Please enter your first and last name');
       setLoading(false);
       return;
     }
@@ -61,7 +62,7 @@ const Auth: React.FC = () => {
         toast.success('Welcome back!');
         navigate('/dashboard');
       } else {
-        const response = await register(email, password, name);
+        const response = await register(email, password, firstName, lastName);
         if (!response.success) {
           toast.error(response.errors[0] || 'Registration failed. Please try again.');
           setLoading(false);
@@ -118,18 +119,34 @@ const Auth: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {mode === 'register' && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                  />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="First name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
             )}

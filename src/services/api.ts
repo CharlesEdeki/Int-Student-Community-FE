@@ -35,7 +35,7 @@ const simulateNetworkDelay = (ms: number = 500) =>
 
 // In-memory storage (simulates PostgreSQL)
 let users: DbUser[] = [];
-let refreshTokens: Map<string, string> = new Map();
+const refreshTokens: Map<string, string> = new Map();
 
 // Database models (matching PostgreSQL schema)
 export interface DbUser {

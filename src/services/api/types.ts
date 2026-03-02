@@ -32,7 +32,8 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  name: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface RefreshTokenRequest {
@@ -116,7 +117,14 @@ export interface GroupDto {
   category: string;
   isPrivate: boolean;
   memberCount: number;
+  onlineCount?: number;
   createdAt: string;
+}
+
+export interface UserGroupsResponse {
+  groups: GroupDto[];
+  totalGroups: number;
+  totalMemberCount: number;
 }
 
 export interface CreateGroupRequest {

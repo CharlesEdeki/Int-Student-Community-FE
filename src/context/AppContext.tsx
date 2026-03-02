@@ -51,6 +51,8 @@ export interface Group {
   name: string;
   description: string;
   members: string[];
+  memberCount: number;
+  onlineCount: number;
   createdAt: string;
   expiresAt: string;
   iceBreakers: string[];
@@ -145,7 +147,7 @@ interface AppState {
 interface AppContextType extends AppState {
   login: (email: string, password: string) => Promise<ApiResponse<AuthResponse | null>>;
   logout: () => void;
-  register: (email: string, password: string, name: string) => Promise<ApiResponse<AuthResponse | null>>;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<ApiResponse<AuthResponse | null>>;
   setOnboardingData: (data: Partial<OnboardingData>) => void;
   completeOnboarding: () => Promise<ApiResponse<UserDto | null>>;
   sendMessage: (groupId: string, content: string) => Promise<void>;
@@ -251,18 +253,77 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     priority: dto.isPinned ? 'high' : 'normal',
   }), []);
 
-  // Load initial data on mount (only if authenticated)
-  // Clear tokens on app mount to force logout on every page load/refresh
-  // Users must login each time they load the app or server restarts
+  // Load initial data on mount (restore session if user has valid token)
   useEffect(() => {
-    tokenManager.clearTokens();
-    setState(prev => ({
-      ...prev,
-      isAuthenticated: false,
-      currentUser: null,
-      onboardingData: defaultOnboardingData,
-    }));
-  }, []);
+    const accessToken = tokenManager.getAccessToken();
+    if (accessToken) {
+      // Try to restore user from localStorage
+      try {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          setState(prev => ({
+            ...prev,
+            isAuthenticated: true,
+            currentUser: user,
+          }));
+          
+          // Fetch fresh data for groups, events, announcements, notifications
+          (async () => {
+            try {
+              const [groupsRes, eventsRes, announcementsRes, notificationsRes] = await Promise.all([
+                groupsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+                eventsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+                announcementsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+                notificationsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+              ]);
+              
+              let groups: Group[] = [];
+              if (groupsRes.success && groupsRes.data && groupsRes.data.groups) {
+                groups = groupsRes.data.groups.map((dto: GroupDto) => ({
+                  id: dto.id,
+                  name: dto.name,
+                  description: dto.description || '',
+                  members: [],
+                  memberCount: dto.memberCount,
+                  onlineCount: dto.onlineCount || 0,
+                  createdAt: dto.createdAt,
+                  expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                  iceBreakers: [],
+                  checklist: [],
+                  polls: [],
+                }));
+              }
+              
+              const events = eventsRes.success && eventsRes.data ? eventsRes.data.map(mapDtoToEvent) : [];
+              const announcements = announcementsRes.success && announcementsRes.data ? announcementsRes.data.map(mapDtoToAnnouncement) : [];
+              const notifications = notificationsRes.success && notificationsRes.data ? notificationsRes.data.map(mapDtoToNotification) : [];
+              
+              setState(prev => ({
+                ...prev,
+                groups,
+                events,
+                announcements,
+                notifications,
+                currentGroupId: groups[0]?.id || null,
+              }));
+            } catch (error) {
+              console.error('[AppContext] Failed to restore user data:', error);
+            }
+          })();
+        }
+      } catch (error) {
+        console.error('[AppContext] Failed to restore user from localStorage:', error);
+      }
+    } else {
+      setState(prev => ({
+        ...prev,
+        isAuthenticated: false,
+        currentUser: null,
+        onboardingData: defaultOnboardingData,
+      }));
+    }
+  }, [mapDtoToEvent, mapDtoToAnnouncement, mapDtoToNotification]);
 
   const login = useCallback(async (email: string, password: string): Promise<ApiResponse<AuthResponse | null>> => {
     const response = await authApi.login({ email, password });
@@ -318,12 +379,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const announcements = announcementsRes.success && announcementsRes.data ? announcementsRes.data.map(mapDtoToAnnouncement) : [];
 
       let groups: Group[] = [];
-      if (groupsRes.success && groupsRes.data) {
-        groups = groupsRes.data.map((dto: GroupDto) => ({
+      if (groupsRes.success && groupsRes.data && groupsRes.data.groups) {
+        groups = groupsRes.data.groups.map((dto: GroupDto) => ({
           id: dto.id,
           name: dto.name,
           description: dto.description || '',
           members: [],
+          memberCount: dto.memberCount,
+          onlineCount: dto.onlineCount || 0,
           createdAt: dto.createdAt,
           expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           iceBreakers: [],
@@ -343,6 +406,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         events,
         announcements,
       }));
+      
+      // Save user to localStorage for session persistence
+      localStorage.setItem('currentUser', JSON.stringify(user));
     }
     
     return response;
@@ -353,6 +419,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try { await authApi.logout(); } catch { /* ignore */ }
     }
     tokenManager.clearTokens();
+    
+    // Clear user from localStorage
+    localStorage.removeItem('currentUser');
     
     setState(prev => ({ 
       ...prev, 
@@ -369,8 +438,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, [state.currentUser]);
 
-  const register = useCallback(async (email: string, password: string, name: string): Promise<ApiResponse<AuthResponse | null>> => {
-    const response = await authApi.register({ email, password, name });
+  const register = useCallback(async (email: string, password: string, firstName: string, lastName: string): Promise<ApiResponse<AuthResponse | null>> => {
+    const response = await authApi.register({ email, password, firstName, lastName });
     
     if (response.success && response.data) {
       // Backend returns { token, email, firstName, lastName, userId }
@@ -407,6 +476,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isAuthenticated: true,
       }));
       
+      // Save user to localStorage for session persistence
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      
       console.log('Register: Set isAuthenticated to true', user);
     }
     
@@ -441,33 +513,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (response.success && response.data) {
       const updatedUser = mapDtoToUser(response.data);
 
-      // Create or find a group based on user interests
+      // Fetch user's groups (automatically assigned during onboarding)
       try {
-        const newExpirationDate = new Date();
-        newExpirationDate.setDate(newExpirationDate.getDate() + GROUP_EXPIRATION_DAYS);
-
-        // Create a group name based on primary interests
-        const primaryInterests = onboardingData.interests.slice(0, 2);
-        const groupName = `${primaryInterests.join(' & ')} Enthusiasts`;
-        const groupDescription = `Connect with fellow students interested in ${primaryInterests.join(', ')}`;
-        const category = primaryInterests[0] || 'General';
-
-        // Create group
-        const groupResponse = await groupsApi.create({
-          name: groupName,
-          description: groupDescription,
-          category,
-          memberIds: [currentUser.id],
-        });
-
-        if (groupResponse.success && groupResponse.data) {
-          const newGroup: Group = {
-            id: groupResponse.data.id,
-            name: groupResponse.data.name,
-            description: groupResponse.data.description || '',
-            members: [currentUser.id],
-            createdAt: groupResponse.data.createdAt,
-            expiresAt: newExpirationDate.toISOString(),
+        const groupsResponse = await groupsApi.getAll(currentUser.id);
+        
+        let groups: Group[] = [];
+        if (groupsResponse.success && groupsResponse.data && groupsResponse.data.groups) {
+          groups = groupsResponse.data.groups.map((dto: GroupDto) => ({
+            id: dto.id,
+            name: dto.name,
+            description: dto.description || '',
+            members: [],
+            memberCount: dto.memberCount,
+            onlineCount: dto.onlineCount || 0,
+            createdAt: dto.createdAt,
+            expiresAt: new Date(Date.now() + GROUP_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
             iceBreakers: [
               'What drew you to this interest group?',
               'What\'s your favorite project or experience in this area?',
@@ -475,28 +535,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ],
             checklist: [],
             polls: [],
-          };
-
-          setState(prev => ({
-            ...prev,
-            currentUser: updatedUser,
-            users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
-            groups: [newGroup, ...prev.groups],
-            currentGroupId: newGroup.id,
-            onboardingData: { ...prev.onboardingData, step: -1 },
-          }));
-        } else {
-          // Group creation failed, but profile was updated
-          setState(prev => ({
-            ...prev,
-            currentUser: updatedUser,
-            users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
-            onboardingData: { ...prev.onboardingData, step: -1 },
           }));
         }
+
+        setState(prev => ({
+          ...prev,
+          currentUser: updatedUser,
+          users: prev.users.map(u => u.id === currentUser.id ? updatedUser : u),
+          groups: [...groups, ...prev.groups],
+          currentGroupId: groups[0]?.id || prev.currentGroupId,
+          onboardingData: { ...prev.onboardingData, step: -1 },
+        }));
       } catch (error) {
-        console.error('[AppContext] Failed to create group:', error);
-        // Continue with profile update even if group creation fails
+        console.error('[AppContext] Failed to fetch groups:', error);
+        // Continue with profile update even if group fetch fails
         setState(prev => ({
           ...prev,
           currentUser: updatedUser,
