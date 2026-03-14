@@ -19,9 +19,15 @@
  * - DELETE {{BASE_URL}}/api/users/:id
  */
 
-// Configuration - Replace with your actual .NET backend URL
+// Configuration - Uses environment variable for secure URL management
+const BASE_URL = import.meta.env.API_BASE_URL;
+
+if (!BASE_URL) {
+  throw new Error('VITE_API_BASE_URL environment variable is not set');
+}
+
 export const API_CONFIG = {
-  BASE_URL: 'https://edinburgh-student-project.onrender.com/api', // Your .NET API URL
+  BASE_URL,
   TIMEOUT: 30000,
   HEADERS: {
     'Content-Type': 'application/json',
