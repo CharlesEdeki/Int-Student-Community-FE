@@ -21,7 +21,7 @@
 
 // Configuration - Replace with your actual .NET backend URL
 export const API_CONFIG = {
-  BASE_URL: 'https://undelusively-unscandalized-melissia.ngrok-free.dev/api', // Your .NET API URL
+  BASE_URL: 'https://edinburgh-student-project.onrender.com/api', // Your .NET API URL
   TIMEOUT: 30000,
   HEADERS: {
     'Content-Type': 'application/json',

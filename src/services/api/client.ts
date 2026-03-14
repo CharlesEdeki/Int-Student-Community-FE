@@ -6,7 +6,11 @@
 
 import type { ApiResponse, AuthTokens } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://undelusively-unscandalized-melissia.ngrok-free.dev/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('VITE_API_BASE_URL environment variable is not set');
+}
 
 // Log the API base URL being used (useful for debugging environment configuration)
 if (import.meta.env.DEV) {
