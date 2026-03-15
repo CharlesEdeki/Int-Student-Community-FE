@@ -17,6 +17,8 @@ const Events = lazy(() => import("@/pages/Events"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Connections = lazy(() => import("@/pages/Connections"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
 const queryClient = new QueryClient();
 
