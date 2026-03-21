@@ -52,28 +52,58 @@ const AdminDashboard: React.FC = () => {
     console.log('[AdminDashboard] Loading data from backend...');
 
     try {
-      const usersRes = await adminApi.getUsers();
+      // Fetch all data in parallel
+      const [usersRes, groupsRes, eventsRes] = await Promise.all([
+        adminApi.getUsers(),
+        adminApi.getGroups(),
+        adminApi.getEvents()
+      ]);
 
+      // Process users
       if (usersRes.success && usersRes.data) {
         const userData = Array.isArray(usersRes.data) ? usersRes.data : [];
         setUsers(userData);
         console.log('[AdminDashboard] Loaded', userData.length, 'users');
-        toast.success('Users loaded successfully');
       } else {
         setUsers([]);
-        setEvents([]);
-        setGroups([]);
         console.warn('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
-        toast.error(usersRes.statusCode === 401
-          ? 'Backend returned 401 Unauthorized. This admin page uses dummy login, so protected admin endpoints need a real backend token or public access.'
-          : `Could not load users: ${usersRes.message || 'Unknown error'}`);
+      }
+
+      // Process groups
+      if (groupsRes.success && groupsRes.data) {
+        const groupData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
+        setGroups(groupData);
+        console.log('[AdminDashboard] Loaded', groupData.length, 'groups');
+      } else {
+        setGroups([]);
+        console.warn('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
+      }
+
+      // Process events
+      if (eventsRes.success && eventsRes.data) {
+        const eventData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
+        setEvents(eventData);
+        console.log('[AdminDashboard] Loaded', eventData.length, 'events');
+      } else {
+        setEvents([]);
+        console.warn('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
+      }
+
+      // Show success message
+      const successCount = [usersRes.success, groupsRes.success, eventsRes.success].filter(Boolean).length;
+      if (successCount === 3) {
+        toast.success('All data loaded successfully');
+      } else if (successCount > 0) {
+        toast.warning(`Partial load: ${successCount}/3 data sources loaded`);
+      } else {
+        toast.error('Failed to load data from backend');
       }
     } catch (e) {
       setUsers([]);
       setEvents([]);
       setGroups([]);
-      console.warn('[AdminDashboard] Users fetch error:', e);
-      toast.error('Could not load users from backend.');
+      console.warn('[AdminDashboard] Data fetch error:', e);
+      toast.error('Could not load data from backend.');
     }
 
     setLoading(false);

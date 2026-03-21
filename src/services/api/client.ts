@@ -147,6 +147,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
   const rawText = await response.text();
   const data = rawText ? JSON.parse(rawText) : null;
 
+  // Log 401 responses for debugging
+  if (response.status === 401) {
+    console.error('[API Client] 401 Unauthorized Response:', {
+      path,
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: data,
+      requestHeaders: headers,
+    });
+  }
+
   // Wrap response to ensure ApiResponse structure
   // Backend may not include success flag, so check HTTP status
   if (data && typeof data === 'object' && 'success' in data) {

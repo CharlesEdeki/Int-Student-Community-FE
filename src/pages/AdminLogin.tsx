@@ -10,12 +10,8 @@ import { authApi } from '@/services/api/auth';
 import { tokenManager } from '@/services/api/client';
 import type { AuthTokens } from '@/services/api/types';
 
-// Dummy admin credentials for testing
-const DUMMY_ADMIN_EMAIL = 'admin@platform.com';
-const DUMMY_ADMIN_PASSWORD = 'admin123';
-
-// TODO: Uncomment below and remove dummy login when connecting to real backend
-// const ADMIN_EMAIL = 'admin@platform.com';
+// Real admin email for validation
+const ADMIN_EMAIL = 'admin@platform.com';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -37,59 +33,53 @@ const AdminLogin: React.FC = () => {
       return;
     }
 
-    // Dummy login - No backend required
-    if (trimmedEmail.toLowerCase() === DUMMY_ADMIN_EMAIL.toLowerCase() && trimmedPassword === DUMMY_ADMIN_PASSWORD) {
-      const adminSession = {
-        userId: 'admin-001',
-        email: trimmedEmail,
-        name: 'Admin User',
-      };
+    // Use real backend auth
+    try {
+      console.log('[AdminLogin] Attempting to authenticate with backend...');
+      const response = await authApi.login({ email: trimmedEmail, password: trimmedPassword });
       
-      localStorage.setItem('admin_session', JSON.stringify(adminSession));
-      toast.success('Welcome, Admin! Redirecting to dashboard...');
-      
-      // Small delay to allow toast to show, then navigate
-      setTimeout(() => {
-        navigate('/admin', { replace: true });
-      }, 500);
-      return;
+      console.log('[AdminLogin] Backend response:', response);
+
+      if (response.success && response.data) {
+        // Check if user is admin
+        if (response.data.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          toast.error('Access denied. Admin credentials required.');
+          setLoading(false);
+          return;
+        }
+        
+        // Store tokens
+        const tokens: AuthTokens = {
+          accessToken: response.data.token || response.data.accessToken || '',
+          refreshToken: response.data.refreshToken || '',
+          expiresIn: 3600,
+          tokenType: 'Bearer',
+        };
+        tokenManager.setTokens(tokens);
+        
+        // Store admin session
+        localStorage.setItem('admin_session', JSON.stringify({
+          userId: response.data.userId || response.data.id,
+          email: response.data.email,
+          name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
+        }));
+        
+        console.log('[AdminLogin] Admin logged in successfully');
+        toast.success('Welcome, Admin! Redirecting to dashboard...');
+        
+        setTimeout(() => {
+          navigate('/admin', { replace: true });
+        }, 500);
+      } else {
+        console.error('[AdminLogin] Login failed:', response);
+        toast.error(response.errors?.[0] || response.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('[AdminLogin] Login error:', error);
+      toast.error(`Something went wrong: ${error instanceof Error ? error.message : 'Please try again'}`);
+    } finally {
+      setLoading(false);
     }
-
-    // Invalid credentials
-    toast.error(`Invalid credentials. Use:\nEmail: ${DUMMY_ADMIN_EMAIL}\nPassword: ${DUMMY_ADMIN_PASSWORD}`);
-    setLoading(false);
-
-    // TODO: Uncomment below for real backend auth
-    // try {
-    //   const response = await authApi.login({ email, password });
-    //   if (response.success && response.data) {
-    //     if (response.data.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    //       toast.error('Access denied. Admin credentials required.');
-    //       setLoading(false);
-    //       return;
-    //     }
-    //     const tokens: AuthTokens = {
-    //       accessToken: response.data.token,
-    //       refreshToken: '',
-    //       expiresIn: 3600,
-    //       tokenType: 'Bearer',
-    //     };
-    //     tokenManager.setTokens(tokens);
-    //     localStorage.setItem('admin_session', JSON.stringify({
-    //       userId: response.data.userId,
-    //       email: response.data.email,
-    //       name: `${response.data.firstName} ${response.data.lastName}`,
-    //     }));
-    //     toast.success('Welcome, Admin!');
-    //     navigate('/admin');
-    //   } else {
-    //     toast.error(response.errors?.[0] || 'Login failed');
-    //   }
-    // } catch {
-    //   toast.error('Something went wrong. Please try again.');
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   return (
