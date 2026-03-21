@@ -144,23 +144,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
     }
   }
 
-  const data = await response.json();
-  
+  const rawText = await response.text();
+  const data = rawText ? JSON.parse(rawText) : null;
+
   // Wrap response to ensure ApiResponse structure
   // Backend may not include success flag, so check HTTP status
   if (data && typeof data === 'object' && 'success' in data) {
-    // Response already has ApiResponse structure
     return data as ApiResponse<T>;
   }
-  
-  // Backend returned raw data, wrap it based on HTTP status
-  const isSuccess = response.ok; // true for 2xx, false otherwise
-  
+
+  const isSuccess = response.ok;
+  const defaultMessage = response.status === 401
+    ? 'Unauthorized'
+    : response.statusText || (isSuccess ? 'Success' : 'Error');
+
   return {
     success: isSuccess,
     data: isSuccess ? (data as T) : null,
-    message: data?.message || (isSuccess ? 'Success' : 'Error'),
-    errors: isSuccess ? [] : [data?.message || 'Unknown error'],
+    message: (data as { message?: string } | null)?.message || defaultMessage,
+    errors: isSuccess ? [] : [((data as { message?: string } | null)?.message || defaultMessage)],
     statusCode: response.status,
   };
 }
