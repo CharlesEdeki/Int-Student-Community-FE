@@ -51,64 +51,29 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     console.log('[AdminDashboard] Loading data from backend...');
 
-    const errors: string[] = [];
-
-    // Fetch each endpoint independently so one failure doesn't block the rest
     try {
       const usersRes = await adminApi.getUsers();
+
       if (usersRes.success && usersRes.data) {
         const userData = Array.isArray(usersRes.data) ? usersRes.data : [];
         setUsers(userData);
         console.log('[AdminDashboard] Loaded', userData.length, 'users');
+        toast.success('Users loaded successfully');
       } else {
         setUsers([]);
-        errors.push('users');
+        setEvents([]);
+        setGroups([]);
         console.warn('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
+        toast.error(usersRes.statusCode === 401
+          ? 'Backend returned 401 Unauthorized. This admin page uses dummy login, so protected admin endpoints need a real backend token or public access.'
+          : `Could not load users: ${usersRes.message || 'Unknown error'}`);
       }
     } catch (e) {
       setUsers([]);
-      errors.push('users');
-      console.warn('[AdminDashboard] Users fetch error:', e);
-    }
-
-    try {
-      const eventsRes = await adminApi.getEvents();
-      if (eventsRes.success && eventsRes.data) {
-        const eventData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
-        setEvents(eventData);
-        console.log('[AdminDashboard] Loaded', eventData.length, 'events');
-      } else {
-        setEvents([]);
-        errors.push('events');
-        console.warn('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
-      }
-    } catch (e) {
       setEvents([]);
-      errors.push('events');
-      console.warn('[AdminDashboard] Events fetch error:', e);
-    }
-
-    try {
-      const groupsRes = await adminApi.getGroups();
-      if (groupsRes.success && groupsRes.data) {
-        const groupData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
-        setGroups(groupData);
-        console.log('[AdminDashboard] Loaded', groupData.length, 'groups');
-      } else {
-        setGroups([]);
-        errors.push('groups');
-        console.warn('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
-      }
-    } catch (e) {
       setGroups([]);
-      errors.push('groups');
-      console.warn('[AdminDashboard] Groups fetch error:', e);
-    }
-
-    if (errors.length > 0) {
-      toast.error(`Could not load: ${errors.join(', ')}. Check backend connection.`);
-    } else {
-      toast.success('Dashboard data loaded successfully');
+      console.warn('[AdminDashboard] Users fetch error:', e);
+      toast.error('Could not load users from backend.');
     }
 
     setLoading(false);
