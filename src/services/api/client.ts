@@ -133,11 +133,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
       if (newToken) {
         headers['Authorization'] = `Bearer ${newToken}`;
       }
-    if (refreshed) {
-      const newToken = tokenManager.getAccessToken();
-      if (newToken) {
-        headers['Authorization'] = `Bearer ${newToken}`;
-      }
       response = await fetch(buildUrl(path, params), { ...fetchOptions, headers });
     } else {
       tokenManager.clearTokens();
