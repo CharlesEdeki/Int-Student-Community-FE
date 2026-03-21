@@ -21,7 +21,7 @@ import type { UserDto, EventDto, GroupDto } from '@/services/api/types';
 type AdminView = 'dashboard' | 'users' | 'events' | 'content' | 'categories';
 
 interface AdminSession {
-  userId: number;
+  userId: number | string;
   email: string;
   name: string;
 }
@@ -45,21 +45,63 @@ const AdminDashboard: React.FC = () => {
     }
     setAdminSession(JSON.parse(session));
     loadData();
-  }, []);
+  }, [navigate]);
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // Fetch data from backend
+      console.log('[AdminDashboard] Loading data from backend...');
       const [usersRes, eventsRes, groupsRes] = await Promise.all([
-        adminApi.getUsers().catch(() => ({ success: false, data: null })),
-        adminApi.getEvents().catch(() => ({ success: false, data: null })),
-        adminApi.getGroups().catch(() => ({ success: false, data: null })),
+        adminApi.getUsers(),
+        adminApi.getEvents(),
+        adminApi.getGroups(),
       ]);
-      if (usersRes.success && usersRes.data) setUsers(usersRes.data);
-      if (eventsRes.success && eventsRes.data) setEvents(eventsRes.data);
-      if (groupsRes.success && groupsRes.data) setGroups(groupsRes.data);
-    } catch {
-      toast.error('Failed to load data');
+
+      console.log('[AdminDashboard] Users response:', usersRes);
+      console.log('[AdminDashboard] Events response:', eventsRes);
+      console.log('[AdminDashboard] Groups response:', groupsRes);
+
+      // Handle users
+      if (usersRes.success && usersRes.data) {
+        const userData = Array.isArray(usersRes.data) ? usersRes.data : [];
+        setUsers(userData);
+        console.log('[AdminDashboard] Loaded', userData.length, 'users');
+      } else {
+        setUsers([]);
+        console.error('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
+        toast.error(`Failed to load users: ${usersRes.message || 'Unknown error'}`);
+      }
+
+      // Handle events
+      if (eventsRes.success && eventsRes.data) {
+        const eventData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
+        setEvents(eventData);
+        console.log('[AdminDashboard] Loaded', eventData.length, 'events');
+      } else {
+        setEvents([]);
+        console.error('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
+        toast.error(`Failed to load events: ${eventsRes.message || 'Unknown error'}`);
+      }
+
+      // Handle groups
+      if (groupsRes.success && groupsRes.data) {
+        const groupData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
+        setGroups(groupData);
+        console.log('[AdminDashboard] Loaded', groupData.length, 'groups');
+      } else {
+        setGroups([]);
+        console.error('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
+        toast.error(`Failed to load groups: ${groupsRes.message || 'Unknown error'}`);
+      }
+
+      toast.success('Dashboard data loaded successfully');
+    } catch (error) {
+      console.error('[AdminDashboard] Failed to load dashboard data:', error);
+      setUsers([]);
+      setEvents([]);
+      setGroups([]);
+      toast.error(`Failed to load data from backend: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -138,6 +180,44 @@ const DashboardView: React.FC<{
   setView: (v: AdminView) => void;
   onRefresh: () => void;
 }> = ({ users, groups, upcomingEvents, pastEvents, setView, onRefresh }) => {
+  const [isRotating, setIsRotating] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+
+  const handleGroupRotation = async () => {
+    setIsRotating(true);
+    try {
+      const res = await adminApi.triggerGroupRotation();
+      if (res.success) {
+        toast.success('Group rotation triggered successfully');
+        onRefresh();
+      } else {
+        toast.error('Failed to trigger group rotation');
+      }
+    } catch (error) {
+      console.error('Group rotation error:', error);
+      toast.error('Error triggering group rotation');
+    } finally {
+      setIsRotating(false);
+    }
+  };
+
+  const handleEvaluateRules = async () => {
+    setIsEvaluating(true);
+    try {
+      const res = await adminApi.getGroupStats();
+      if (res.success) {
+        toast.success('Adaptive rules evaluated successfully');
+      } else {
+        toast.error('Failed to evaluate adaptive rules');
+      }
+    } catch (error) {
+      console.error('Evaluation error:', error);
+      toast.error('Error evaluating adaptive rules');
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
   const stats = [
     { label: 'Users', value: users.length, color: 'text-primary' },
     { label: 'Groups', value: groups.length, color: 'text-primary' },
@@ -174,8 +254,13 @@ const DashboardView: React.FC<{
             <p className="text-sm text-muted-foreground mb-4">
               Automatically reshuffle members into new groups for enhanced cultural integration.
             </p>
-            <Button className="w-full bg-gradient-primary text-primary-foreground gap-2">
-              <RefreshCw className="w-4 h-4" /> Run Rotation Now
+            <Button 
+              onClick={handleGroupRotation}
+              disabled={isRotating}
+              className="w-full bg-gradient-primary text-primary-foreground gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRotating ? 'animate-spin' : ''}`} /> 
+              {isRotating ? 'Running...' : 'Run Rotation Now'}
             </Button>
           </CardContent>
         </Card>
@@ -188,8 +273,14 @@ const DashboardView: React.FC<{
             <p className="text-sm text-muted-foreground mb-4">
               Evaluate and apply adaptive participation rules for active user engagement.
             </p>
-            <Button variant="secondary" className="w-full gap-2">
-              <Zap className="w-4 h-4" /> Evaluate Adaptive Rules
+            <Button 
+              onClick={handleEvaluateRules}
+              disabled={isEvaluating}
+              variant="secondary" 
+              className="w-full gap-2"
+            >
+              <Zap className={`w-4 h-4 ${isEvaluating ? 'animate-spin' : ''}`} /> 
+              {isEvaluating ? 'Evaluating...' : 'Evaluate Adaptive Rules'}
             </Button>
           </CardContent>
         </Card>
@@ -226,6 +317,8 @@ const UsersView: React.FC<{
   setView: (v: AdminView) => void;
 }> = ({ users, onRefresh, setView }) => {
   const [search, setSearch] = useState('');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
@@ -233,16 +326,21 @@ const UsersView: React.FC<{
 
   const handleRemove = async (userId: string, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName}?`)) return;
+    
+    setIsDeleting(userId);
     try {
       const res = await adminApi.removeUser(userId);
       if (res.success) {
         toast.success(`${userName} removed successfully`);
         onRefresh();
       } else {
-        toast.error('Failed to remove user');
+        toast.error(`Failed to remove ${userName}`);
       }
-    } catch {
-      toast.error('Failed to remove user');
+    } catch (error) {
+      console.error('Remove user error:', error);
+      toast.error('Error removing user');
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -293,10 +391,11 @@ const UsersView: React.FC<{
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={isDeleting === user.id}
                         className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
                         onClick={() => handleRemove(user.id, user.name)}
                       >
-                        <Trash2 className="w-3 h-3" /> Remove
+                        <Trash2 className="w-3 h-3" /> {isDeleting === user.id ? 'Removing...' : 'Remove'}
                       </Button>
                     </div>
                   </TableCell>
@@ -328,6 +427,8 @@ const EventsView: React.FC<{
   setView: (v: AdminView) => void;
 }> = ({ events, onRefresh, setView }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({ title: '', location: '', startDate: '', endDate: '' });
 
   const handleCreate = async () => {
@@ -335,38 +436,55 @@ const EventsView: React.FC<{
       toast.error('Title and start date are required');
       return;
     }
+
+    setIsCreating(true);
     try {
-      const res = await adminApi.createEvent({
+      const eventPayload = {
         title: newEvent.title,
-        location: newEvent.location,
-        startDate: newEvent.startDate,
-        endDate: newEvent.endDate || newEvent.startDate,
-      });
+        location: newEvent.location || null,
+        startDate: new Date(newEvent.startDate).toISOString(),
+        endDate: newEvent.endDate ? new Date(newEvent.endDate).toISOString() : null,
+        description: '',
+        imageUrl: null,
+        isVirtual: false,
+        virtualLink: null,
+        maxAttendees: 100,
+      };
+
+      const res = await adminApi.createEvent(eventPayload);
       if (res.success) {
-        toast.success('Event created');
+        toast.success('Event created successfully');
         setIsCreateOpen(false);
         setNewEvent({ title: '', location: '', startDate: '', endDate: '' });
         onRefresh();
       } else {
         toast.error('Failed to create event');
       }
-    } catch {
-      toast.error('Failed to create event');
+    } catch (error) {
+      console.error('Create event error:', error);
+      toast.error('Error creating event');
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleDelete = async (eventId: string, title: string) => {
     if (!confirm(`Delete event "${title}"?`)) return;
+
+    setIsDeleting(eventId);
     try {
       const res = await adminApi.deleteEvent(eventId);
       if (res.success) {
-        toast.success('Event deleted');
+        toast.success('Event deleted successfully');
         onRefresh();
       } else {
         toast.error('Failed to delete event');
       }
-    } catch {
-      toast.error('Failed to delete event');
+    } catch (error) {
+      console.error('Delete event error:', error);
+      toast.error('Error deleting event');
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -383,7 +501,11 @@ const EventsView: React.FC<{
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Calendar className="w-8 h-8 text-primary" /> Manage Events
         </h1>
-        <Button onClick={() => setIsCreateOpen(true)} className="bg-gradient-primary text-primary-foreground gap-2">
+        <Button 
+          onClick={() => setIsCreateOpen(true)} 
+          disabled={isCreating}
+          className="bg-gradient-primary text-primary-foreground gap-2"
+        >
           <Plus className="w-4 h-4" /> Add New Event
         </Button>
       </div>
@@ -415,10 +537,11 @@ const EventsView: React.FC<{
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={isDeleting === event.id}
                         className="gap-1 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
                         onClick={() => handleDelete(event.id, event.title)}
                       >
-                        <Trash2 className="w-3 h-3" /> Delete
+                        <Trash2 className="w-3 h-3" /> {isDeleting === event.id ? 'Deleting...' : 'Delete'}
                       </Button>
                     </div>
                   </TableCell>
@@ -467,8 +590,20 @@ const EventsView: React.FC<{
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} className="bg-gradient-primary text-primary-foreground">Create Event</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCreateOpen(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreate} 
+              disabled={isCreating}
+              className="bg-gradient-primary text-primary-foreground"
+            >
+              {isCreating ? 'Creating...' : 'Create Event'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

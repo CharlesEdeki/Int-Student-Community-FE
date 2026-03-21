@@ -27,26 +27,36 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (!email || !password) {
-      toast.error('Please enter email and password');
+    // Validate input
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      toast.error('Please enter both email and password');
       setLoading(false);
       return;
     }
 
-    // Dummy login for testing
-    if (email.toLowerCase() === DUMMY_ADMIN_EMAIL && password === DUMMY_ADMIN_PASSWORD) {
-      localStorage.setItem('admin_session', JSON.stringify({
+    // Dummy login - No backend required
+    if (trimmedEmail.toLowerCase() === DUMMY_ADMIN_EMAIL.toLowerCase() && trimmedPassword === DUMMY_ADMIN_PASSWORD) {
+      const adminSession = {
         userId: 'admin-001',
-        email: DUMMY_ADMIN_EMAIL,
+        email: trimmedEmail,
         name: 'Admin User',
-      }));
-      toast.success('Welcome, Admin!');
-      navigate('/admin');
-      setLoading(false);
+      };
+      
+      localStorage.setItem('admin_session', JSON.stringify(adminSession));
+      toast.success('Welcome, Admin! Redirecting to dashboard...');
+      
+      // Small delay to allow toast to show, then navigate
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 500);
       return;
     }
 
-    toast.error('Invalid admin credentials');
+    // Invalid credentials
+    toast.error(`Invalid credentials. Use:\nEmail: ${DUMMY_ADMIN_EMAIL}\nPassword: ${DUMMY_ADMIN_PASSWORD}`);
     setLoading(false);
 
     // TODO: Uncomment below for real backend auth

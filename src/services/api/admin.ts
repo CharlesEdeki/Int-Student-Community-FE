@@ -24,40 +24,130 @@ export interface AdminUserDto {
   isOnline: boolean;
 }
 
+export interface GroupStatsResponse {
+  groupRotationData: any;
+  participationMetrics: any;
+}
+
 export const adminApi = {
-  /** GET /api/Users - Get all users for admin */
+  // ===== User Management =====
+  /** GET /api/Users - Get all users */
   getUsers: (): Promise<ApiResponse<UserDto[]>> =>
     apiClient.get<UserDto[]>('/Users'),
 
-  /** DELETE /api/Users/:id */
+  /** GET /api/Users/{id} - Get user by ID */
+  getUserById: (id: string): Promise<ApiResponse<UserDto>> =>
+    apiClient.get<UserDto>(`/Users/${id}`),
+
+  /** PUT /api/Users/{id} - Update user */
+  updateUser: (id: string, data: Partial<UserDto>): Promise<ApiResponse<UserDto>> =>
+    apiClient.put<UserDto>(`/Users/${id}`, data),
+
+  /** DELETE /api/Users/{id} - Delete/Remove user */
   removeUser: (id: string): Promise<ApiResponse<null>> =>
     apiClient.delete<null>(`/Users/${id}`),
 
-  /** GET /api/events - Get all events */
+  /** GET /api/Users/{id}/groups - Get user's groups */
+  getUserGroups: (id: string): Promise<ApiResponse<GroupDto[]>> =>
+    apiClient.get<GroupDto[]>(`/Users/${id}/groups`),
+
+  /** GET /api/Users/{id}/events - Get user's events */
+  getUserEvents: (id: string): Promise<ApiResponse<EventDto[]>> =>
+    apiClient.get<EventDto[]>(`/Users/${id}/events`),
+
+  /** GET /api/Users/{id}/notifications - Get user notifications */
+  getUserNotifications: (id: string): Promise<ApiResponse<any[]>> =>
+    apiClient.get<any[]>(`/Users/${id}/notifications`),
+
+  /** POST /api/Users/{id}/notifications/read-all - Mark notifications as read */
+  markNotificationsRead: (id: string): Promise<ApiResponse<null>> =>
+    apiClient.post<null>(`/Users/${id}/notifications/read-all`, {}),
+
+  // ===== Event Management =====
+  /** GET /api/Events - Get all events */
   getEvents: (): Promise<ApiResponse<EventDto[]>> =>
-    apiClient.get<EventDto[]>('/events'),
+    apiClient.get<EventDto[]>('/Events'),
 
-  /** DELETE /api/events/:id */
+  /** POST /api/Events - Create event */
+  createEvent: (data: Partial<EventDto>): Promise<ApiResponse<EventDto>> =>
+    apiClient.post<EventDto>('/Events', data),
+
+  /** GET /api/Events/{id} - Get event by ID */
+  getEventById: (id: string): Promise<ApiResponse<EventDto>> =>
+    apiClient.get<EventDto>(`/Events/${id}`),
+
+  /** PUT /api/Events/{id} - Update event */
+  updateEvent: (id: string, data: Partial<EventDto>): Promise<ApiResponse<EventDto>> =>
+    apiClient.put<EventDto>(`/Events/${id}`, data),
+
+  /** DELETE /api/Events/{id} - Delete event */
   deleteEvent: (id: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/events/${id}`),
+    apiClient.delete<null>(`/Events/${id}`),
 
-  /** POST /api/events */
-  createEvent: (data: any): Promise<ApiResponse<EventDto>> =>
-    apiClient.post<EventDto>('/events', data),
+  /** GET /api/Events/{id}/attendees - Get event attendees */
+  getEventAttendees: (id: string): Promise<ApiResponse<UserDto[]>> =>
+    apiClient.get<UserDto[]>(`/Events/${id}/attendees`),
 
-  /** GET /api/groups - Get all groups */
+  // ===== Group Management =====
+  /** GET /api/Groups - Get all groups */
   getGroups: (): Promise<ApiResponse<GroupDto[]>> =>
-    apiClient.get<GroupDto[]>('/groups'),
+    apiClient.get<GroupDto[]>('/Groups'),
 
-  /** GET /api/announcements */
+  /** POST /api/Groups - Create group */
+  createGroup: (data: Partial<GroupDto>): Promise<ApiResponse<GroupDto>> =>
+    apiClient.post<GroupDto>('/Groups', data),
+
+  /** GET /api/Groups/{id} - Get group by ID */
+  getGroupById: (id: string): Promise<ApiResponse<GroupDto>> =>
+    apiClient.get<GroupDto>(`/Groups/${id}`),
+
+  /** PUT /api/Groups/{id} - Update group */
+  updateGroup: (id: string, data: Partial<GroupDto>): Promise<ApiResponse<GroupDto>> =>
+    apiClient.put<GroupDto>(`/Groups/${id}`, data),
+
+  /** DELETE /api/Groups/{id} - Delete group */
+  deleteGroup: (id: string): Promise<ApiResponse<null>> =>
+    apiClient.delete<null>(`/Groups/${id}`),
+
+  /** GET /api/Groups/{id}/members - Get group members */
+  getGroupMembers: (id: string): Promise<ApiResponse<UserDto[]>> =>
+    apiClient.get<UserDto[]>(`/Groups/${id}/members`),
+
+  /** POST /api/Groups/{id}/members/{userId} - Add member to group */
+  addGroupMember: (groupId: string, userId: string): Promise<ApiResponse<null>> =>
+    apiClient.post<null>(`/Groups/${groupId}/members/${userId}`, {}),
+
+  /** DELETE /api/Groups/{id}/members/{userId} - Remove member from group */
+  removeGroupMember: (groupId: string, userId: string): Promise<ApiResponse<null>> =>
+    apiClient.delete<null>(`/Groups/${groupId}/members/${userId}`),
+
+  // ===== Announcement Management =====
+  /** GET /api/Announcements - Get all announcements */
   getAnnouncements: (): Promise<ApiResponse<AnnouncementDto[]>> =>
-    apiClient.get<AnnouncementDto[]>('/announcements'),
+    apiClient.get<AnnouncementDto[]>('/Announcements'),
 
-  /** POST /api/announcements */
-  createAnnouncement: (data: any): Promise<ApiResponse<AnnouncementDto>> =>
-    apiClient.post<AnnouncementDto>('/announcements', data),
+  /** POST /api/Announcements - Create announcement */
+  createAnnouncement: (data: Partial<AnnouncementDto>): Promise<ApiResponse<AnnouncementDto>> =>
+    apiClient.post<AnnouncementDto>('/Announcements', data),
 
-  /** DELETE /api/announcements/:id */
+  /** GET /api/Announcements/{id} - Get announcement by ID */
+  getAnnouncementById: (id: string): Promise<ApiResponse<AnnouncementDto>> =>
+    apiClient.get<AnnouncementDto>(`/Announcements/${id}`),
+
+  /** PUT /api/Announcements/{id} - Update announcement */
+  updateAnnouncement: (id: string, data: Partial<AnnouncementDto>): Promise<ApiResponse<AnnouncementDto>> =>
+    apiClient.put<AnnouncementDto>(`/Announcements/${id}`, data),
+
+  /** DELETE /api/Announcements/{id} - Delete announcement */
   deleteAnnouncement: (id: string): Promise<ApiResponse<null>> =>
-    apiClient.delete<null>(`/announcements/${id}`),
+    apiClient.delete<null>(`/Announcements/${id}`),
+
+  // ===== Admin Operations =====
+  /** POST /api/Admin/trigger-group-rotation - Trigger group member rotation */
+  triggerGroupRotation: (): Promise<ApiResponse<any>> =>
+    apiClient.post<any>('/Admin/trigger-group-rotation', {}),
+
+  /** GET /api/Admin/group-stats - Get group statistics */
+  getGroupStats: (): Promise<ApiResponse<GroupStatsResponse>> =>
+    apiClient.get<GroupStatsResponse>('/Admin/group-stats'),
 };
