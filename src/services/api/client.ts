@@ -136,7 +136,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
       response = await fetch(buildUrl(path, params), { ...fetchOptions, headers });
     } else {
       tokenManager.clearTokens();
-      window.dispatchEvent(new CustomEvent('auth:logout'));
+      // Only dispatch logout if not in an admin session (admin uses dummy auth)
+      const adminSession = localStorage.getItem('admin_session');
+      if (!adminSession) {
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+      }
     }
   }
 

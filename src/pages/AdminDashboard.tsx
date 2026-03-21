@@ -49,62 +49,69 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
+    console.log('[AdminDashboard] Loading data from backend...');
+
+    const errors: string[] = [];
+
+    // Fetch each endpoint independently so one failure doesn't block the rest
     try {
-      // Fetch data from backend
-      console.log('[AdminDashboard] Loading data from backend...');
-      const [usersRes, eventsRes, groupsRes] = await Promise.all([
-        adminApi.getUsers(),
-        adminApi.getEvents(),
-        adminApi.getGroups(),
-      ]);
-
-      console.log('[AdminDashboard] Users response:', usersRes);
-      console.log('[AdminDashboard] Events response:', eventsRes);
-      console.log('[AdminDashboard] Groups response:', groupsRes);
-
-      // Handle users
+      const usersRes = await adminApi.getUsers();
       if (usersRes.success && usersRes.data) {
         const userData = Array.isArray(usersRes.data) ? usersRes.data : [];
         setUsers(userData);
         console.log('[AdminDashboard] Loaded', userData.length, 'users');
       } else {
         setUsers([]);
-        console.error('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
-        toast.error(`Failed to load users: ${usersRes.message || 'Unknown error'}`);
+        errors.push('users');
+        console.warn('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
       }
+    } catch (e) {
+      setUsers([]);
+      errors.push('users');
+      console.warn('[AdminDashboard] Users fetch error:', e);
+    }
 
-      // Handle events
+    try {
+      const eventsRes = await adminApi.getEvents();
       if (eventsRes.success && eventsRes.data) {
         const eventData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
         setEvents(eventData);
         console.log('[AdminDashboard] Loaded', eventData.length, 'events');
       } else {
         setEvents([]);
-        console.error('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
-        toast.error(`Failed to load events: ${eventsRes.message || 'Unknown error'}`);
+        errors.push('events');
+        console.warn('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
       }
+    } catch (e) {
+      setEvents([]);
+      errors.push('events');
+      console.warn('[AdminDashboard] Events fetch error:', e);
+    }
 
-      // Handle groups
+    try {
+      const groupsRes = await adminApi.getGroups();
       if (groupsRes.success && groupsRes.data) {
         const groupData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
         setGroups(groupData);
         console.log('[AdminDashboard] Loaded', groupData.length, 'groups');
       } else {
         setGroups([]);
-        console.error('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
-        toast.error(`Failed to load groups: ${groupsRes.message || 'Unknown error'}`);
+        errors.push('groups');
+        console.warn('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
       }
-
-      toast.success('Dashboard data loaded successfully');
-    } catch (error) {
-      console.error('[AdminDashboard] Failed to load dashboard data:', error);
-      setUsers([]);
-      setEvents([]);
+    } catch (e) {
       setGroups([]);
-      toast.error(`Failed to load data from backend: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
+      errors.push('groups');
+      console.warn('[AdminDashboard] Groups fetch error:', e);
     }
+
+    if (errors.length > 0) {
+      toast.error(`Could not load: ${errors.join(', ')}. Check backend connection.`);
+    } else {
+      toast.success('Dashboard data loaded successfully');
+    }
+
+    setLoading(false);
   };
 
   const handleLogout = () => {
