@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,17 +8,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  User, Globe, GraduationCap, Heart, Languages, 
-  Camera, Save, Mail, MapPin
+import {
+  User,
+  Globe,
+  GraduationCap,
+  Heart,
+  Languages,
+  Camera,
+  Save,
+  Mail,
+  MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const INTERESTS = [
   'Technology', 'Music', 'Photography', 'Cooking', 'Travel',
   'Art & Design', 'Sports', 'Reading', 'Social Events', 'Culture',
-  'Gaming', 'Movies', 'Entrepreneurship', 'Volunteering'
+  'Gaming', 'Movies', 'Entrepreneurship', 'Volunteering',
 ];
+
+const normalizeInterest = (value: string) => value.trim().toLowerCase();
+const formatInterestLabel = (value: string) =>
+  value
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 
 const Profile: React.FC = () => {
   const { currentUser, updateProfile } = useApp();
@@ -34,6 +48,11 @@ const Profile: React.FC = () => {
     languages: currentUser?.languages || [],
   });
 
+  const normalizedFormInterests = useMemo(
+    () => new Set((formData.interests || []).map(normalizeInterest)),
+    [formData.interests]
+  );
+
   const handleSave = () => {
     updateProfile(formData);
     setEditMode(false);
@@ -41,17 +60,18 @@ const Profile: React.FC = () => {
   };
 
   const toggleInterest = (interest: string) => {
+    const normalizedInterest = normalizeInterest(interest);
+
     setFormData(prev => ({
       ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
+      interests: prev.interests.some(item => normalizeInterest(item) === normalizedInterest)
+        ? prev.interests.filter(item => normalizeInterest(item) !== normalizedInterest)
+        : [...prev.interests, interest],
     }));
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-      {/* Profile Header */}
       <Card className="border-border/50 shadow-soft overflow-hidden">
         <div className="h-32 bg-gradient-hero" />
         <CardContent className="relative pt-0">
@@ -82,7 +102,7 @@ const Profile: React.FC = () => {
                 </div>
                 <Button
                   variant={editMode ? 'outline' : 'default'}
-                  onClick={() => editMode ? handleSave() : setEditMode(true)}
+                  onClick={() => (editMode ? handleSave() : setEditMode(true))}
                   className={editMode ? '' : 'bg-gradient-primary text-primary-foreground gap-2'}
                 >
                   {editMode ? <><Save className="w-4 h-4 mr-2" />Save Changes</> : 'Edit Profile'}
@@ -102,7 +122,6 @@ const Profile: React.FC = () => {
 
         <TabsContent value="about" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bio */}
             <Card className="border-border/50 shadow-soft">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -126,7 +145,6 @@ const Profile: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Location */}
             <Card className="border-border/50 shadow-soft">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -147,7 +165,6 @@ const Profile: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Education */}
             <Card className="border-border/50 shadow-soft md:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -189,7 +206,6 @@ const Profile: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Languages */}
             <Card className="border-border/50 shadow-soft md:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -223,27 +239,34 @@ const Profile: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {INTERESTS.map(interest => {
-                  const isSelected = editMode 
-                    ? formData.interests.includes(interest)
-                    : currentUser?.interests.includes(interest);
-                  
-                  if (!editMode && !isSelected) return null;
+                {editMode ? (
+                  INTERESTS.map(interest => {
+                    const isSelected = normalizedFormInterests.has(normalizeInterest(interest));
 
-                  return (
+                    return (
+                      <Badge
+                        key={interest}
+                        variant={isSelected ? 'default' : 'outline'}
+                        className={`px-4 py-2 cursor-pointer transition-all ${
+                          isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
+                        }`}
+                        onClick={() => toggleInterest(interest)}
+                      >
+                        {interest}
+                      </Badge>
+                    );
+                  })
+                ) : (
+                  (currentUser?.interests || []).map(interest => (
                     <Badge
                       key={interest}
-                      variant={isSelected ? 'default' : 'outline'}
-                      className={`px-4 py-2 cursor-pointer transition-all
-                        ${isSelected 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'hover:bg-secondary'}`}
-                      onClick={() => editMode && toggleInterest(interest)}
+                      variant="default"
+                      className="px-4 py-2 bg-primary text-primary-foreground"
                     >
-                      {interest}
+                      {formatInterestLabel(interest)}
                     </Badge>
-                  );
-                })}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
