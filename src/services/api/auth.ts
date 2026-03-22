@@ -14,6 +14,10 @@ export const authApi = {
   login: (data: LoginRequest): Promise<ApiResponse<AuthResponse>> =>
     apiClient.post<AuthResponse>('/Auth/login', data, { skipAuth: true }),
 
+  /** POST /api/Auth/admin-login */
+  adminLogin: (data: LoginRequest): Promise<ApiResponse<AuthResponse>> =>
+    apiClient.post<AuthResponse>('/Auth/admin-login', data, { skipAuth: true }),
+
   /** POST /api/Auth/refresh */
   refresh: (refreshToken: string): Promise<ApiResponse<AuthTokens>> =>
     apiClient.post<AuthTokens>('/Auth/refresh', { refreshToken }, { skipAuth: true }),

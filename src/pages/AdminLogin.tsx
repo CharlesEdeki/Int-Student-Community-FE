@@ -34,7 +34,7 @@ const AdminLogin: React.FC = () => {
     try {
       // Silently handle
 
-      const response = await authApi.login({ email: trimmedEmail, password: trimmedPassword });
+      const response = await authApi.adminLogin({ email: trimmedEmail, password: trimmedPassword });
       
       // Silently handle
 
