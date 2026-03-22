@@ -375,8 +375,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       authApi.saveTokens(tokens);
       
-      // Create user object from response data
-      const user: User = {
+      // Create basic user object from login response
+      let user: User = {
         id: backendData.userId.toString(),
         name: `${backendData.firstName} ${backendData.lastName}`,
         email: backendData.email,
@@ -391,6 +391,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         joinedAt: new Date().toISOString().split('T')[0],
         isOnline: true,
       };
+
+      // Fetch full profile from backend (includes onboarding data)
+      try {
+        const profileRes = await usersApi.getById(user.id);
+        if (profileRes.success && profileRes.data) {
+          user = mapDtoToUser(profileRes.data);
+        }
+      } catch { /* use basic user if profile fetch fails */ }
       
       // Fetch user notifications
       let notifications: Notification[] = [];
