@@ -210,8 +210,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     major: dto.major || '',
     year: dto.year || '',
     bio: dto.bio || '',
-    interests: dto.interests,
-    languages: dto.languages,
+    interests: dto.interests || [],
+    languages: dto.languages || [],
     joinedAt: dto.createdAt.split('T')[0],
     isOnline: dto.isOnline,
   }), []);

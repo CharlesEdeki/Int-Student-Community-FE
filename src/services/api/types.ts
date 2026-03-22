@@ -57,6 +57,11 @@ export interface AuthResponse {
   phoneNumber: string | null;
   token: string;
   userId: number;
+  // Alternative field names from different API versions
+  accessToken?: string;
+  refreshToken?: string;
+  id?: string;
+  name?: string;
 }
 
 // ===== Users =====
