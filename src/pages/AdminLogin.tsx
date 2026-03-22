@@ -10,9 +10,6 @@ import { authApi } from '@/services/api/auth';
 import { tokenManager } from '@/services/api/client';
 import type { AuthTokens } from '@/services/api/types';
 
-// Real admin email for validation
-const ADMIN_EMAIL = 'admin@platform.com';
-
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,13 +40,6 @@ const AdminLogin: React.FC = () => {
 
 
       if (response.success && response.data) {
-        // Check if user is admin
-        if (response.data.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-          toast.error('Access denied. Admin credentials required.');
-          setLoading(false);
-          return;
-        }
-        
         // Store tokens
         const tokens: AuthTokens = {
           accessToken: response.data.token || response.data.accessToken || '',
@@ -66,8 +56,6 @@ const AdminLogin: React.FC = () => {
           name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
         }));
         
-      // Silently handle
-
         toast.success('Welcome, Admin! Redirecting to dashboard...');
         
         setTimeout(() => {
