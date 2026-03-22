@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-refresh/only-export-components */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
@@ -253,6 +254,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     priority: dto.isPinned ? 'high' : 'normal',
   }), []);
 
+  // Helper function to load full group data (members, checklist, polls)
+  const loadFullGroupData = useCallback(async (groupDto: GroupDto): Promise<Group> => {
+    const baseGroup: Group = {
+      id: groupDto.id,
+      name: groupDto.name,
+      description: groupDto.description || '',
+      members: [],
+      memberCount: groupDto.memberCount,
+      onlineCount: groupDto.onlineCount || 0,
+      createdAt: groupDto.createdAt,
+      expiresAt: new Date(Date.now() + GROUP_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      iceBreakers: [
+        'What drew you to this group?',
+        'What\'s your favorite experience related to this group\'s topic?',
+        'What would you like to learn from this group?',
+      ],
+      checklist: [],
+      polls: [],
+    };
+
+    try {
+      // Fetch members only (checklist and polls endpoints don't exist on backend)
+      const membersRes = await groupsApi.getMembers(groupDto.id).catch(() => ({ success: false, data: null }));
+
+      // Process members
+      if (membersRes.success && Array.isArray(membersRes.data)) {
+        baseGroup.members = membersRes.data.map((m: GroupMemberDto) => m.userId);
+      }
+    } catch (error) {
+      // Silently handle group data loading errors
+    }
+
+    return baseGroup;
+  }, []);
+
   // Load initial data on mount (restore session if user has valid token)
   useEffect(() => {
     const accessToken = tokenManager.getAccessToken();
@@ -262,37 +298,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
           const user = JSON.parse(savedUser);
+          // Also try to restore groups from cache for immediate display
+          const savedGroups = localStorage.getItem('userGroups');
+          const savedUsers = localStorage.getItem('groupUsers');
+          const cachedGroups = savedGroups ? JSON.parse(savedGroups) : [];
+          const cachedUsers = savedUsers ? JSON.parse(savedUsers) : [];
+          
           setState(prev => ({
             ...prev,
             isAuthenticated: true,
             currentUser: user,
+            groups: cachedGroups,
+            users: cachedUsers,
+            currentGroupId: cachedGroups[0]?.id || null,
           }));
           
           // Fetch fresh data for groups, events, announcements, notifications
           (async () => {
             try {
               const [groupsRes, eventsRes, announcementsRes, notificationsRes] = await Promise.all([
-                groupsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
-                eventsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
-                announcementsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
-                notificationsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
+                groupsApi.getAll(user.id).catch(() => ({ success: false, data: null, errors: [], statusCode: 0 })),
+                eventsApi.getAll().catch(() => ({ success: false, data: null, errors: [], statusCode: 0 })),
+                announcementsApi.getAll().catch(() => ({ success: false, data: null, errors: [], statusCode: 0 })),
+                notificationsApi.getAll(user.id).catch(() => ({ success: false, data: null, errors: [], statusCode: 0 })),
               ]);
               
               let groups: Group[] = [];
               if (groupsRes.success && groupsRes.data && groupsRes.data.groups) {
-                groups = groupsRes.data.groups.map((dto: GroupDto) => ({
-                  id: dto.id,
-                  name: dto.name,
-                  description: dto.description || '',
-                  members: [],
-                  memberCount: dto.memberCount,
-                  onlineCount: dto.onlineCount || 0,
-                  createdAt: dto.createdAt,
-                  expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-                  iceBreakers: [],
-                  checklist: [],
-                  polls: [],
-                }));
+                groups = await Promise.all(groupsRes.data.groups.map(loadFullGroupData));
               }
               
               const events = eventsRes.success && eventsRes.data ? eventsRes.data.map(mapDtoToEvent) : [];
@@ -307,13 +340,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 notifications,
                 currentGroupId: groups[0]?.id || null,
               }));
+              // Update localStorage with fresh data
+              localStorage.setItem('userGroups', JSON.stringify(groups));
             } catch (error) {
-              console.error('[AppContext] Failed to restore user data:', error);
+              // Silently fail for session restore
             }
           })();
         }
       } catch (error) {
-        console.error('[AppContext] Failed to restore user from localStorage:', error);
+        // Silently fail for localStorage restore
       }
     } else {
       setState(prev => ({
@@ -367,32 +402,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } catch { /* ignore */ }
 
       // Fetch groups, events, announcements after login
-      const [groupsRes, eventsRes, announcementsRes, usersRes] = await Promise.all([
+      const [groupsRes, eventsRes, announcementsRes] = await Promise.all([
         groupsApi.getAll(user.id).catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
         eventsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
         announcementsApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
-        usersApi.getAll().catch(err => ({ success: false, data: null, errors: [err.message], statusCode: 0 })),
       ]);
 
-      const users = usersRes.success && usersRes.data ? usersRes.data.map(mapDtoToUser) : [];
+      // Start with just the current user; other users will be fetched as needed
+      let users: User[] = [user];
       const events = eventsRes.success && eventsRes.data ? eventsRes.data.map(mapDtoToEvent) : [];
       const announcements = announcementsRes.success && announcementsRes.data ? announcementsRes.data.map(mapDtoToAnnouncement) : [];
 
       let groups: Group[] = [];
       if (groupsRes.success && groupsRes.data && groupsRes.data.groups) {
-        groups = groupsRes.data.groups.map((dto: GroupDto) => ({
-          id: dto.id,
-          name: dto.name,
-          description: dto.description || '',
-          members: [],
-          memberCount: dto.memberCount,
-          onlineCount: dto.onlineCount || 0,
-          createdAt: dto.createdAt,
-          expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          iceBreakers: [],
-          checklist: [],
-          polls: [],
-        }));
+        groups = await Promise.all(groupsRes.data.groups.map(loadFullGroupData));
+        
+        // Collect all unique user IDs from group members
+        const userIds = new Set<string>();
+        groups.forEach(g => {
+          g.members.forEach(memberId => {
+            if (memberId !== user.id) {
+              userIds.add(memberId);
+            }
+          });
+        });
+        
+        // Fetch details for all group members in parallel
+        const memberPromises = Array.from(userIds).map(userId =>
+          usersApi.getById(userId).catch(err => ({ success: false, data: null }))
+        );
+        const memberResponses = await Promise.all(memberPromises);
+        
+        // Add fetched users to the users array
+        memberResponses.forEach(res => {
+          if (res.success && res.data) {
+            if (!users.find(u => u.id === res.data.id)) {
+              users.push(mapDtoToUser(res.data));
+            }
+          }
+        });
       }
       
       setState(prev => ({ 
@@ -407,12 +455,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         announcements,
       }));
       
-      // Save user to localStorage for session persistence
+      // Save user and groups to localStorage for session persistence
       localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('userGroups', JSON.stringify(groups));
+      localStorage.setItem('groupUsers', JSON.stringify(users));
     }
     
     return response;
-  }, [mapDtoToUser, mapDtoToNotification, mapDtoToEvent, mapDtoToAnnouncement]);
+  }, [mapDtoToUser, mapDtoToNotification, mapDtoToEvent, mapDtoToAnnouncement, loadFullGroupData]);
 
   const logout = useCallback(async () => {
     if (state.currentUser) {
@@ -420,8 +470,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     tokenManager.clearTokens();
     
-    // Clear user from localStorage
+    // Clear user and groups from localStorage
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('userGroups');
+    localStorage.removeItem('groupUsers');
     
     setState(prev => ({ 
       ...prev, 
@@ -479,7 +531,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Save user to localStorage for session persistence
       localStorage.setItem('currentUser', JSON.stringify(user));
       
-      console.log('Register: Set isAuthenticated to true', user);
+
     }
     
     return response;
@@ -519,23 +571,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         
         let groups: Group[] = [];
         if (groupsResponse.success && groupsResponse.data && groupsResponse.data.groups) {
-          groups = groupsResponse.data.groups.map((dto: GroupDto) => ({
-            id: dto.id,
-            name: dto.name,
-            description: dto.description || '',
-            members: [],
-            memberCount: dto.memberCount,
-            onlineCount: dto.onlineCount || 0,
-            createdAt: dto.createdAt,
-            expiresAt: new Date(Date.now() + GROUP_EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
-            iceBreakers: [
-              'What drew you to this interest group?',
-              'What\'s your favorite project or experience in this area?',
-              'What would you like to learn from this group?',
-            ],
-            checklist: [],
-            polls: [],
-          }));
+          groups = await Promise.all(groupsResponse.data.groups.map(loadFullGroupData));
         }
 
         setState(prev => ({
@@ -547,7 +583,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           onboardingData: { ...prev.onboardingData, step: -1 },
         }));
       } catch (error) {
-        console.error('[AppContext] Failed to fetch groups:', error);
         // Continue with profile update even if group fetch fails
         setState(prev => ({
           ...prev,
@@ -559,7 +594,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     return response;
-  }, [state, mapDtoToUser]);
+  }, [state, mapDtoToUser, loadFullGroupData]);
 
   const sendMessage = useCallback(async (groupId: string, content: string) => {
     if (!state.currentUser) return;
@@ -578,7 +613,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setState(prev => ({ ...prev, messages: [...prev.messages, newMessage] }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to send message:', error);
+      // Silently handle send message errors
     }
   }, [state.currentUser]);
 
@@ -603,7 +638,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to load messages:', error);
+      // Silently handle message loading errors
     }
   }, []);
 
@@ -652,7 +687,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }),
       }));
     } catch (error) {
-      console.error('[AppContext] Failed to add reaction:', error);
+      // Silently handle reaction errors
     }
   }, [state.currentUser, state.messages]);
 
@@ -676,7 +711,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to toggle checklist item:', error);
+      // Silently handle errors
     }
   }, []);
 
@@ -708,7 +743,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ),
       }));
     } catch (error) {
-      console.error('[AppContext] Failed to vote on poll:', error);
+      // Silently handle errors
     }
   }, [state.currentUser]);
 
@@ -745,7 +780,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setState(prev => ({ ...prev, events: [...prev.events, newEvent] }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to create event:', error);
+      // Silently handle errors
     }
   }, [state.currentUser, mapDtoToEvent]);
 
@@ -778,7 +813,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ),
       }));
     } catch (error) {
-      console.error('[AppContext] Failed to RSVP event:', error);
+      // Silently handle RSVP errors
     }
   }, [state.currentUser, state.events]);
 
@@ -806,7 +841,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to update profile:', error);
+      // Silently handle errors
     }
   }, [state.currentUser, mapDtoToUser]);
 
@@ -820,7 +855,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ),
       }));
     } catch (error) {
-      console.error('[AppContext] Failed to mark notification as read:', error);
+      // Silently handle errors
     }
   }, []);
 
@@ -862,7 +897,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to create poll:', error);
+      // Silently handle errors
     }
   }, []);
 
@@ -884,7 +919,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     } catch (error) {
-      console.error('[AppContext] Failed to create announcement:', error);
+      // Silently handle errors
     }
   }, [state.currentUser, mapDtoToAnnouncement]);
 

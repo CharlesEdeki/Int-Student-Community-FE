@@ -49,7 +49,8 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    console.log('[AdminDashboard] Loading data from backend...');
+      // Silently handle
+
 
     try {
       // Fetch all data in parallel
@@ -63,30 +64,36 @@ const AdminDashboard: React.FC = () => {
       if (usersRes.success && usersRes.data) {
         const userData = Array.isArray(usersRes.data) ? usersRes.data : [];
         setUsers(userData);
-        console.log('[AdminDashboard] Loaded', userData.length, 'users');
+      // Silently handle
+
       } else {
         setUsers([]);
-        console.warn('[AdminDashboard] Users response failed:', usersRes.message || usersRes.errors);
+      // Silently handle
+
       }
 
       // Process groups
       if (groupsRes.success && groupsRes.data) {
         const groupData = Array.isArray(groupsRes.data) ? groupsRes.data : [];
         setGroups(groupData);
-        console.log('[AdminDashboard] Loaded', groupData.length, 'groups');
+      // Silently handle
+
       } else {
         setGroups([]);
-        console.warn('[AdminDashboard] Groups response failed:', groupsRes.message || groupsRes.errors);
+      // Silently handle
+
       }
 
       // Process events
       if (eventsRes.success && eventsRes.data) {
         const eventData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
         setEvents(eventData);
-        console.log('[AdminDashboard] Loaded', eventData.length, 'events');
+      // Silently handle
+
       } else {
         setEvents([]);
-        console.warn('[AdminDashboard] Events response failed:', eventsRes.message || eventsRes.errors);
+      // Silently handle
+
       }
 
       // Show success message
@@ -102,7 +109,8 @@ const AdminDashboard: React.FC = () => {
       setUsers([]);
       setEvents([]);
       setGroups([]);
-      console.warn('[AdminDashboard] Data fetch error:', e);
+      // Silently handle
+
       toast.error('Could not load data from backend.');
     }
 
@@ -196,7 +204,8 @@ const DashboardView: React.FC<{
         toast.error('Failed to trigger group rotation');
       }
     } catch (error) {
-      console.error('Group rotation error:', error);
+      // Silently handle
+
       toast.error('Error triggering group rotation');
     } finally {
       setIsRotating(false);
@@ -213,7 +222,8 @@ const DashboardView: React.FC<{
         toast.error('Failed to evaluate adaptive rules');
       }
     } catch (error) {
-      console.error('Evaluation error:', error);
+      // Silently handle
+
       toast.error('Error evaluating adaptive rules');
     } finally {
       setIsEvaluating(false);
@@ -339,7 +349,8 @@ const UsersView: React.FC<{
         toast.error(`Failed to remove ${userName}`);
       }
     } catch (error) {
-      console.error('Remove user error:', error);
+      // Silently handle
+
       toast.error('Error removing user');
     } finally {
       setIsDeleting(null);
@@ -463,7 +474,8 @@ const EventsView: React.FC<{
         toast.error('Failed to create event');
       }
     } catch (error) {
-      console.error('Create event error:', error);
+      // Silently handle
+
       toast.error('Error creating event');
     } finally {
       setIsCreating(false);
@@ -483,7 +495,8 @@ const EventsView: React.FC<{
         toast.error('Failed to delete event');
       }
     } catch (error) {
-      console.error('Delete event error:', error);
+      // Silently handle
+
       toast.error('Error deleting event');
     } finally {
       setIsDeleting(null);

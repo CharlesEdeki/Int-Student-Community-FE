@@ -35,10 +35,12 @@ const AdminLogin: React.FC = () => {
 
     // Use real backend auth
     try {
-      console.log('[AdminLogin] Attempting to authenticate with backend...');
+      // Silently handle
+
       const response = await authApi.login({ email: trimmedEmail, password: trimmedPassword });
       
-      console.log('[AdminLogin] Backend response:', response);
+      // Silently handle
+
 
       if (response.success && response.data) {
         // Check if user is admin
@@ -64,18 +66,21 @@ const AdminLogin: React.FC = () => {
           name: response.data.name || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim(),
         }));
         
-        console.log('[AdminLogin] Admin logged in successfully');
+      // Silently handle
+
         toast.success('Welcome, Admin! Redirecting to dashboard...');
         
         setTimeout(() => {
           navigate('/admin', { replace: true });
         }, 500);
       } else {
-        console.error('[AdminLogin] Login failed:', response);
+      // Silently handle
+
         toast.error(response.errors?.[0] || response.message || 'Login failed');
       }
     } catch (error) {
-      console.error('[AdminLogin] Login error:', error);
+      // Silently handle
+
       toast.error(`Something went wrong: ${error instanceof Error ? error.message : 'Please try again'}`);
     } finally {
       setLoading(false);

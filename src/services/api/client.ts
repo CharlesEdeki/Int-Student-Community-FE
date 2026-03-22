@@ -12,11 +12,6 @@ if (!API_BASE_URL) {
   throw new Error('VITE_API_BASE_URL environment variable is not set');
 }
 
-// Log the API base URL being used (useful for debugging environment configuration)
-if (import.meta.env.DEV) {
-  console.log('[API Client] Using API Base URL:', API_BASE_URL);
-}
-
 const TOKEN_STORAGE_KEY = 'auth_tokens';
 
 // ===== Token Management =====
@@ -147,17 +142,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
   const rawText = await response.text();
   const data = rawText ? JSON.parse(rawText) : null;
 
-  // Log 401 responses for debugging
-  if (response.status === 401) {
-    console.error('[API Client] 401 Unauthorized Response:', {
-      path,
-      status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      body: data,
-      requestHeaders: headers,
-    });
-  }
-
   // Wrap response to ensure ApiResponse structure
   // Backend may not include success flag, so check HTTP status
   if (data && typeof data === 'object' && 'success' in data) {
@@ -201,5 +185,3 @@ export const apiClient = {
     return request<T>(path, { ...options, method: 'DELETE' });
   },
 };
-
-export { API_BASE_URL };

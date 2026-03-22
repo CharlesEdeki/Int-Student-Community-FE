@@ -69,10 +69,12 @@ const Auth: React.FC = () => {
           return;
         }
         toast.success('Account created successfully!');
-        console.log('Registration successful, navigating to onboarding');
+      // Silently handle
+
         // Add delay to allow state update to complete before navigation
         setTimeout(() => {
-          console.log('Navigating to onboarding now');
+      // Silently handle
+
           navigate('/onboarding');
         }, 300);
       }

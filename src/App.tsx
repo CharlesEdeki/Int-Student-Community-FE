@@ -32,7 +32,8 @@ const AppRoutes = () => {
   const { isAuthenticated, onboardingData } = useApp();
   
   if (typeof window !== 'undefined') {
-    console.log('[AppRoutes] isAuthenticated:', isAuthenticated);
+      // Silently handle
+
   }
   
   return (

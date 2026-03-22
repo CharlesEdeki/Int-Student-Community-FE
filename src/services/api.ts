@@ -174,8 +174,6 @@ export const authApi = {
   register: async (request: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
     await simulateNetworkDelay();
     
-    console.log('[API] POST /api/auth/register', { email: request.email, name: request.name });
-    
     // Validation
     if (!request.email || !request.password || !request.name) {
       return {
@@ -235,8 +233,6 @@ export const authApi = {
     const refreshToken = generateToken(newUser.id, 'refresh');
     refreshTokens.set(refreshToken, newUser.id);
 
-    console.log('[API] User registered successfully:', newUser.id);
-
     return {
       success: true,
       data: {
@@ -267,8 +263,6 @@ export const authApi = {
    */
   login: async (request: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
     await simulateNetworkDelay();
-    
-    console.log('[API] POST /api/auth/login', { email: request.email });
 
     // Validation
     if (!request.email || !request.password) {
@@ -313,8 +307,6 @@ export const authApi = {
     const refreshToken = generateToken(user.id, 'refresh');
     refreshTokens.set(refreshToken, user.id);
 
-    console.log('[API] Login successful:', user.id);
-
     return {
       success: true,
       data: {
@@ -344,8 +336,6 @@ export const authApi = {
    */
   refresh: async (refreshToken: string): Promise<ApiResponse<AuthTokens>> => {
     await simulateNetworkDelay(200);
-    
-    console.log('[API] POST /api/auth/refresh');
 
     const userId = refreshTokens.get(refreshToken);
     if (!userId) {
@@ -390,8 +380,6 @@ export const authApi = {
    */
   logout: async (userId: string): Promise<ApiResponse<null>> => {
     await simulateNetworkDelay(200);
-    
-    console.log('[API] POST /api/auth/logout', { userId });
 
     const user = users.find(u => u.id === userId);
     if (user) {
@@ -430,8 +418,6 @@ export const usersApi = {
    */
   getAll: async (): Promise<ApiResponse<UserDto[]>> => {
     await simulateNetworkDelay(300);
-    
-    console.log('[API] GET /api/users');
 
     return {
       success: true,
@@ -452,8 +438,6 @@ export const usersApi = {
    */
   getById: async (id: string): Promise<ApiResponse<UserDto>> => {
     await simulateNetworkDelay(200);
-    
-    console.log('[API] GET /api/users/:id', { id });
 
     const user = users.find(u => u.id === id);
     if (!user) {
@@ -491,8 +475,6 @@ export const usersApi = {
    */
   update: async (id: string, data: Partial<UserDto>): Promise<ApiResponse<UserDto>> => {
     await simulateNetworkDelay();
-    
-    console.log('[API] PUT /api/users/:id', { id, data });
 
     const userIndex = users.findIndex(u => u.id === id);
     if (userIndex === -1) {
@@ -537,8 +519,6 @@ export const usersApi = {
    */
   delete: async (id: string): Promise<ApiResponse<null>> => {
     await simulateNetworkDelay();
-    
-    console.log('[API] DELETE /api/users/:id', { id });
 
     const userIndex = users.findIndex(u => u.id === id);
     if (userIndex === -1) {
