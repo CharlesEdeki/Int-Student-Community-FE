@@ -171,7 +171,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <>
             {view === 'dashboard' && <DashboardView users={users} groups={groups} upcomingEvents={upcomingEvents} pastEvents={pastEvents} setView={setView} onRefresh={loadData} />}
-            {view === 'users' && <UsersView users={users} onRefresh={loadData} setView={setView} />}
+            {view === 'users' && <UsersView users={users} groups={groups} onRefresh={loadData} setView={setView} />}
             {view === 'events' && <EventsView events={events} onRefresh={loadData} setView={setView} />}
             {view === 'content' && <ContentView setView={setView} />}
           </>
