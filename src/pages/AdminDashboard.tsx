@@ -430,7 +430,17 @@ const UsersView: React.FC<{
                   <TableCell className="font-medium">{user.name || '—'}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.country || '—'}</TableCell>
-                  <TableCell>0</TableCell>
+                  <TableCell>
+                    {userGroupNames[user.id]?.length ? (
+                      <div className="flex flex-wrap gap-1">
+                        {userGroupNames[user.id].map((name, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                   <TableCell>
                     <Badge variant="default" className="bg-success text-success-foreground">Active</Badge>
