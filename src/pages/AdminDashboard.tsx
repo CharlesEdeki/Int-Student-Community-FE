@@ -171,7 +171,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <>
             {view === 'dashboard' && <DashboardView users={users} groups={groups} upcomingEvents={upcomingEvents} pastEvents={pastEvents} setView={setView} onRefresh={loadData} />}
-            {view === 'users' && <UsersView users={users} onRefresh={loadData} setView={setView} />}
+            {view === 'users' && <UsersView users={users} groups={groups} onRefresh={loadData} setView={setView} />}
             {view === 'events' && <EventsView events={events} onRefresh={loadData} setView={setView} />}
             {view === 'content' && <ContentView setView={setView} />}
           </>
@@ -325,11 +325,50 @@ const DashboardView: React.FC<{
 // ===== Users Management =====
 const UsersView: React.FC<{
   users: UserDto[];
+  groups: GroupDto[];
   onRefresh: () => void;
   setView: (v: AdminView) => void;
-}> = ({ users, onRefresh, setView }) => {
+}> = ({ users, groups, onRefresh, setView }) => {
   const [search, setSearch] = useState('');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [userGroupCounts, setUserGroupCounts] = useState<Record<string, number>>({});
+  const [userGroupNames, setUserGroupNames] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    const loadUserGroups = async () => {
+      const counts: Record<string, number> = {};
+      const names: Record<string, string[]> = {};
+      
+      // For each group, fetch its members to build user->groups mapping
+      await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const res = await adminApi.getGroupMembers(group.id);
+            if (res.success && res.data) {
+              const members = Array.isArray(res.data) ? res.data : [];
+              members.forEach((member: any) => {
+                const uid = member.userId || member.id;
+                if (uid) {
+                  counts[uid] = (counts[uid] || 0) + 1;
+                  if (!names[uid]) names[uid] = [];
+                  names[uid].push(group.name);
+                }
+              });
+            }
+          } catch {
+            // skip this group
+          }
+        })
+      );
+      
+      setUserGroupCounts(counts);
+      setUserGroupNames(names);
+    };
+
+    if (groups.length > 0) {
+      loadUserGroups();
+    }
+  }, [groups]);
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -391,7 +430,17 @@ const UsersView: React.FC<{
                   <TableCell className="font-medium">{user.name || '—'}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.country || '—'}</TableCell>
-                  <TableCell>0</TableCell>
+                  <TableCell>
+                    {userGroupNames[user.id]?.length ? (
+                      <div className="flex flex-wrap gap-1">
+                        {userGroupNames[user.id].map((name, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                   <TableCell>
                     <Badge variant="default" className="bg-success text-success-foreground">Active</Badge>
