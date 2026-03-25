@@ -325,11 +325,50 @@ const DashboardView: React.FC<{
 // ===== Users Management =====
 const UsersView: React.FC<{
   users: UserDto[];
+  groups: GroupDto[];
   onRefresh: () => void;
   setView: (v: AdminView) => void;
-}> = ({ users, onRefresh, setView }) => {
+}> = ({ users, groups, onRefresh, setView }) => {
   const [search, setSearch] = useState('');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [userGroupCounts, setUserGroupCounts] = useState<Record<string, number>>({});
+  const [userGroupNames, setUserGroupNames] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    const loadUserGroups = async () => {
+      const counts: Record<string, number> = {};
+      const names: Record<string, string[]> = {};
+      
+      // For each group, fetch its members to build user->groups mapping
+      await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const res = await adminApi.getGroupMembers(group.id);
+            if (res.success && res.data) {
+              const members = Array.isArray(res.data) ? res.data : [];
+              members.forEach((member: any) => {
+                const uid = member.userId || member.id;
+                if (uid) {
+                  counts[uid] = (counts[uid] || 0) + 1;
+                  if (!names[uid]) names[uid] = [];
+                  names[uid].push(group.name);
+                }
+              });
+            }
+          } catch {
+            // skip this group
+          }
+        })
+      );
+      
+      setUserGroupCounts(counts);
+      setUserGroupNames(names);
+    };
+
+    if (groups.length > 0) {
+      loadUserGroups();
+    }
+  }, [groups]);
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
