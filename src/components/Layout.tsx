@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import logo from '@/assets/logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -33,9 +34,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col fixed h-full">
         {/* Logo */}
         <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-soft">
-            <Globe className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img
+            src={logo}
+            alt="Edinburgh Int'l Students logo"
+            width={40}
+            height={40}
+            loading="lazy"
+            className="w-10 h-10 object-contain"
+          />
           <div>
             <h1 className="font-bold text-foreground">Edinburgh In't Students</h1>
             <p className="text-xs text-muted-foreground">Community</p>
