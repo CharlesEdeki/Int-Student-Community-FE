@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { authApi } from '@/services/api/auth';
 import { tokenManager } from '@/services/api/client';
 import type { AuthTokens } from '@/services/api/types';
+import logo from '@/assets/logo.png';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -82,9 +83,13 @@ const AdminLogin: React.FC = () => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <div className="flex items-center gap-3 mb-8 animate-fade-in">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
-          <ShieldCheck className="w-6 h-6 text-primary-foreground" />
-        </div>
+        <img
+          src={logo}
+          alt="Edinburgh Int'l Students logo"
+          width={48}
+          height={48}
+          className="w-12 h-12 object-contain"
+        />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
           <p className="text-sm text-muted-foreground">Edinburgh Int'l Students Platform</p>
